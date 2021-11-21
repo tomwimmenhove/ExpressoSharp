@@ -5,20 +5,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 //using Microsoft.CodeAnalysis.VisualBasic;
-
-
-namespace ACO
-{
-    class MainForm
-    {
-        public void Main()
-        {
-        }
-    }
-}
-
-
 
 namespace Expresso
 {
@@ -75,6 +63,126 @@ namespace Expresso
         }
     }
 
+    internal static class TypeExtensions
+    {
+        internal static TypeSyntax ToTypeSyntax(this Type type) =>
+            type == typeof(void)
+                ? SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword))
+                : SyntaxFactory.ParseTypeName(type.FullName);
+    }
+
+    public class ExpressoParameter
+    {
+        public string Name { get; }
+        public Type Type { get; }
+
+        public ExpressoParameter(string name, Type type)
+        {
+            Name = name;
+            Type = type;
+        }
+
+        internal ParameterSyntax ToParameterSyntax() =>
+            SyntaxFactory.Parameter(SyntaxFactory.Identifier(Name))
+                .WithType(SyntaxFactory.ParseTypeName(Type.FullName));
+    }
+
+    public class ExpressoMethod
+    {
+        public string Name { get; }
+        public Type ReturnType { get; }
+        public string Expression { get;}
+        public ExpressoParameter[] Parameters { get; }
+
+        public ExpressoMethod(string name, Type returnType, string expression,
+            params ExpressoParameter[] parameters)
+        {
+            Name = name;
+            ReturnType = returnType;
+            Expression = expression;
+            Parameters = parameters;
+        }
+
+        internal MethodDeclarationSyntax ToMethodDeclarationSyntax()
+        {
+            var returnStatement = SyntaxFactory.ParseExpression(Expression);
+            var expressionDiagnostics = returnStatement.GetDiagnostics();
+
+            if (expressionDiagnostics.Any())
+            {
+                throw new CompilerException("Compilation failed", expressionDiagnostics);
+            }
+
+            return SyntaxFactory.MethodDeclaration(ReturnType.ToTypeSyntax(), Name).AddModifiers(
+                SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
+                    Parameters.Select(x => x.ToParameterSyntax()).ToArray())
+                .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(returnStatement)));
+        }
+    }
+
+    public class ExpressionCompiler
+    {
+        // private static T CreateParameters<T>(params) where T : Delegate
+        // {
+        //     var member = assembly.GetType(typeName).GetMember(memberName);
+
+        //     return (T)Delegate.CreateDelegate(typeof(T), null, (MethodInfo)member[0]);
+        // }
+
+        public static void Test()
+        {
+            var parameter = new ExpressoParameter("x", typeof(int));
+            var method = new ExpressoMethod("TestMethod", typeof(double), "x * 42", parameter);
+
+            var compilationUnit = CreateCompilationUnit("TestNameSpace", "TestClass", method.ToMethodDeclarationSyntax());
+
+            var sourceTest = compilationUnit.NormalizeWhitespace().ToString();
+
+            Console.WriteLine(sourceTest);
+
+            var assembly = Compiler.Compile(compilationUnit.SyntaxTree);
+            
+            var calc = DelegateConverter<Func<int, double>>(assembly, "TestNameSpace.TestClass", "TestMethod");
+
+            Console.WriteLine(calc(2));
+
+        }
+
+        private static T DelegateConverter<T>(Assembly assembly, string typeName, string memberName) where T : Delegate
+        {
+            var member = assembly.GetType(typeName).GetMember(memberName);
+
+            return (T) Delegate.CreateDelegate(typeof(T), null, (MethodInfo)member[0]);
+        }
+
+        private static MethodDeclarationSyntax CreateMethod(string name, Type returnType, string expression,
+            params ExpressoParameter[] parameters)
+        {
+            var returnStatement = SyntaxFactory.ParseExpression(expression);
+            var expressionDiagnostics = returnStatement.GetDiagnostics();
+
+            if (expressionDiagnostics.Any())
+            {
+                throw new CompilerException("Compilation failed", expressionDiagnostics);
+            }
+
+            return SyntaxFactory.MethodDeclaration(returnType.ToTypeSyntax(), name).AddModifiers(
+                SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
+                    parameters.Select(x => x.ToParameterSyntax()).ToArray())
+                .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(returnStatement)));
+        }
+
+        private static CompilationUnitSyntax CreateCompilationUnit(string nameSpaceName, string className,
+            params MethodDeclarationSyntax[] methods) =>
+            SyntaxFactory.CompilationUnit().AddMembers
+            (
+                SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(nameSpaceName)).AddMembers
+                (
+                    SyntaxFactory.ClassDeclaration(className).AddMembers(methods)
+                )
+            );
+    }
+
     class Program
     {
         public static T DelegateConverter<T>(Assembly assembly, string typeName, string memberName) where T: Delegate
@@ -88,6 +196,8 @@ namespace Expresso
 
         static void Main(string[] args)
         {
+            ExpressionCompiler.Test();
+            return;
             //var statement = SyntaxFactory.ParseStatement("return 42;");
             var expression = SyntaxFactory.ParseExpression("a * 21");
 
@@ -105,12 +215,14 @@ namespace Expresso
                                 SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters
                                 (
                                     SyntaxFactory.Parameter(SyntaxFactory.Identifier("a"))
-                                        .WithType(SyntaxFactory.ParseTypeName(typeof (int).FullName))                                        
+                                        .WithType(SyntaxFactory.ParseTypeName(typeof (int).FullName))
                                 )
                                     .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(expression)))
                             )
                     )
             );
+            
+            var plaplapla = typeof(void);
 
             var bla = comp.NormalizeWhitespace().ToString();
 
