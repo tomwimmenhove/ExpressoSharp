@@ -83,7 +83,8 @@ namespace Expresso
         {
             var method = CreateMethodDeclarationSyntax<T>("SingleMethod", expression, parameterNames);
 
-            var allTypes = new HashSet<Type>(method.Parameters.Select(x => x.Type));
+            var parameterTypes = method.Parameters.Select(x => x.Type).ToArray();
+            var allTypes = new HashSet<Type>(parameterTypes);
             if (method.ReturnType != typeof(void))
             {
                 allTypes.Add(method.ReturnType);
@@ -97,9 +98,9 @@ namespace Expresso
 
             var assembly = Compile(compilationUnit.SyntaxTree, allTypes);
 
-            var member = assembly.GetType("SingleNameSpace.SingleClass").GetMember("SingleMethod");
+            var singleMethod = assembly.GetType("SingleNameSpace.SingleClass").GetMethod("SingleMethod", 0, parameterTypes);
 
-            return (T) Delegate.CreateDelegate(typeof(T), null, (MethodInfo)member[0]);
+            return (T) Delegate.CreateDelegate(typeof(T), null, singleMethod);
         }
 
         private static Assembly Compile(SyntaxTree syntaxTree, IEnumerable<Type> usedTypes)
