@@ -122,30 +122,42 @@ namespace Expresso
 
     public class ExpressionCompiler
     {
-        // private static T CreateParameters<T>(params) where T : Delegate
-        // {
-        //     var member = assembly.GetType(typeName).GetMember(memberName);
-
-        //     return (T)Delegate.CreateDelegate(typeof(T), null, (MethodInfo)member[0]);
-        // }
-
         public static void Test()
         {
-            var parameter = new ExpressoParameter("x", typeof(int));
-            var method = new ExpressoMethod("TestMethod", typeof(double), "x * 42", parameter);
-
-            var compilationUnit = CreateCompilationUnit("TestNameSpace", "TestClass", method.ToMethodDeclarationSyntax());
-
-            var sourceTest = compilationUnit.NormalizeWhitespace().ToString();
-
-            Console.WriteLine(sourceTest);
-
-            var assembly = Compiler.Compile(compilationUnit.SyntaxTree);
-            
-            var calc = DelegateConverter<Func<int, double>>(assembly, "TestNameSpace.TestClass", "TestMethod");
+            var calc = CompileExpression<Func<int, double>>("x * 42", "x");
 
             Console.WriteLine(calc(2));
+        }
 
+        public static T CompileExpression<T>(string expression, params string[] parameterNames) where T : Delegate
+        {
+            var method = CreateMethodDeclarationSyntax<T>("SingleMethod", expression, parameterNames);
+            var compilationUnit = CreateCompilationUnitSyntax("SingleNameSpace", "SingleClass", method);
+            var assembly = Compiler.Compile(compilationUnit.SyntaxTree);
+
+            var member = assembly.GetType("SingleNameSpace.SingleClass").GetMember("SingleMethod");
+
+            return (T) Delegate.CreateDelegate(typeof(T), null, (MethodInfo)member[0]);
+        }
+
+        private static MethodDeclarationSyntax CreateMethodDeclarationSyntax<T>(string name, string expression, params string[] parameterNames) where T : Delegate
+        {
+            var invokeMethod = typeof(T).GetMethod("Invoke");
+            var parameters = invokeMethod.GetParameters();
+            if (parameters.Count() != parameterNames.Count())
+            {
+                throw new ArgumentException($"Number of parameter names ({parameters.Count()}) does not match the numbers of parameters of the delegate type ({parameterNames.Count()})");
+            }
+
+            var expressoParameters = new ExpressoParameter[parameters.Count()];
+            for (var i = 0; i < parameters.Count(); i++)
+            {
+                expressoParameters[i] = new ExpressoParameter(parameterNames[i], parameters[i].ParameterType);
+            }
+
+            var method = new ExpressoMethod(name, invokeMethod.ReturnType, expression, expressoParameters);
+
+            return method.ToMethodDeclarationSyntax();
         }
 
         private static T DelegateConverter<T>(Assembly assembly, string typeName, string memberName) where T : Delegate
@@ -155,7 +167,8 @@ namespace Expresso
             return (T) Delegate.CreateDelegate(typeof(T), null, (MethodInfo)member[0]);
         }
 
-        private static MethodDeclarationSyntax CreateMethod(string name, Type returnType, string expression,
+        private static MethodDeclarationSyntax CreateMethodDeclarationSyntax(
+            string name, Type returnType, string expression,
             params ExpressoParameter[] parameters)
         {
             var returnStatement = SyntaxFactory.ParseExpression(expression);
@@ -172,7 +185,7 @@ namespace Expresso
                 .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(returnStatement)));
         }
 
-        private static CompilationUnitSyntax CreateCompilationUnit(string nameSpaceName, string className,
+        private static CompilationUnitSyntax CreateCompilationUnitSyntax(string nameSpaceName, string className,
             params MethodDeclarationSyntax[] methods) =>
             SyntaxFactory.CompilationUnit().AddMembers
             (
