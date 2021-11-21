@@ -89,21 +89,24 @@ namespace Expresso
         static void Main(string[] args)
         {
             //var statement = SyntaxFactory.ParseStatement("return 42;");
-            var expression = SyntaxFactory.ParseExpression("42");
+            var expression = SyntaxFactory.ParseExpression("a * 21");
 
-            var comp = SyntaxFactory.CompilationUnit()
-                .AddMembers(
-                    SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName("InMemory"))
-                        .AddMembers(
-                        SyntaxFactory.ClassDeclaration("CalcClass")
-                            .AddMembers(
-                                // SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(
-                                //     SyntaxFactory.Token(SyntaxKind.VoidKeyword)), "Main")
-                                SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(
-                                    SyntaxFactory.Token(SyntaxKind.DoubleKeyword)), "Calc")
-                                //SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), "Main")
-                                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                                    //.WithBody(SyntaxFactory.Block(statement))
+            var dia = expression.GetDiagnostics();
+
+            var comp = SyntaxFactory.CompilationUnit().AddMembers
+                (
+                    SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName("InMemory")).AddMembers
+                    (
+                        SyntaxFactory.ClassDeclaration("CalcClass").AddMembers
+                        (
+                            SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(
+                                SyntaxFactory.Token(SyntaxKind.DoubleKeyword)), "Calc").AddModifiers
+                            (
+                                SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters
+                                (
+                                    SyntaxFactory.Parameter(SyntaxFactory.Identifier("a"))
+                                        .WithType(SyntaxFactory.ParseTypeName(typeof (int).FullName))                                        
+                                )
                                     .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(expression)))
                             )
                     )
@@ -133,9 +136,9 @@ namespace Expresso
                 return;
             }
 
-            var calc = DelegateConverter<Func<double>>(assembly, "InMemory.CalcClass", "Calc");
+            var calc = DelegateConverter<Func<int, double>>(assembly, "InMemory.CalcClass", "Calc");
 
-            Console.WriteLine(calc());
+            Console.WriteLine(calc(2));
 
             return;
             var code =
