@@ -6,7 +6,6 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-//using Microsoft.CodeAnalysis.VisualBasic;
 
 namespace Expresso
 {
@@ -18,48 +17,6 @@ namespace Expresso
              : base(message)
         {
             Diagnostics = diagnostics;
-        }
-    }
-
-    public class Compiler
-    {
-        public static Assembly Compile(string code)
-        {
-            var syntaxTree = CSharpSyntaxTree.ParseText(code);
-            //var syntaxTree = VisualBasicSyntaxTree.ParseText(code);
-            var bla = syntaxTree.ToString();
-
-            Console.WriteLine(bla);
-
-            return Compile(syntaxTree);
-        }
-
-        public static Assembly Compile(SyntaxTree syntaxTree)
-        {
-            var references = new MetadataReference[]
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                //MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location)
-            };
-
-            var compilation = CSharpCompilation.Create(
-                "InMemoryAssembly",
-                syntaxTrees: new[] { syntaxTree },
-                references: references,
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-            using (var ms = new MemoryStream())
-            {
-                var result = compilation.Emit(ms);
-                if (!result.Success)
-                {
-                    throw new CompilerException("Compilation failed", result.Diagnostics);
-                }
-
-                ms.Seek(0, SeekOrigin.Begin);
-
-                return Assembly.Load(ms.ToArray());
-            }
         }
     }
 
@@ -122,25 +79,54 @@ namespace Expresso
 
     public class ExpressionCompiler
     {
-        public static void Test()
-        {
-            var calc = CompileExpression<Func<int, double>>("x * 42", "x");
-
-            Console.WriteLine(calc(2));
-        }
-
         public static T CompileExpression<T>(string expression, params string[] parameterNames) where T : Delegate
         {
             var method = CreateMethodDeclarationSyntax<T>("SingleMethod", expression, parameterNames);
-            var compilationUnit = CreateCompilationUnitSyntax("SingleNameSpace", "SingleClass", method);
-            var assembly = Compiler.Compile(compilationUnit.SyntaxTree);
+
+            var allTypes = new HashSet<Type>(method.Parameters.Select(x => x.Type));
+            if (method.ReturnType != typeof(void))
+            {
+                allTypes.Add(method.ReturnType);
+            }
+            allTypes.Add(typeof(object));
+
+            var compilationUnit = CreateCompilationUnitSyntax("SingleNameSpace", "SingleClass",
+                method.ToMethodDeclarationSyntax());
+
+            //System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
+
+            var assembly = Compile(compilationUnit.SyntaxTree, allTypes);
 
             var member = assembly.GetType("SingleNameSpace.SingleClass").GetMember("SingleMethod");
 
             return (T) Delegate.CreateDelegate(typeof(T), null, (MethodInfo)member[0]);
         }
 
-        private static MethodDeclarationSyntax CreateMethodDeclarationSyntax<T>(string name, string expression, params string[] parameterNames) where T : Delegate
+        private static Assembly Compile(SyntaxTree syntaxTree, IEnumerable<Type> usedTypes)
+        {
+            var references = usedTypes.Select(x => MetadataReference.CreateFromFile(x.Assembly.Location));
+
+            var compilation = CSharpCompilation.Create(
+                "InMemoryAssembly",
+                syntaxTrees: new[] { syntaxTree },
+                references: references,
+                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+            using (var ms = new MemoryStream())
+            {
+                var result = compilation.Emit(ms);
+                if (!result.Success)
+                {
+                    throw new CompilerException("Compilation failed", result.Diagnostics);
+                }
+
+                ms.Seek(0, SeekOrigin.Begin);
+
+                return Assembly.Load(ms.ToArray());
+            }
+        }
+
+        private static ExpressoMethod CreateMethodDeclarationSyntax<T>(string name, string expression, params string[] parameterNames) where T : Delegate
         {
             var invokeMethod = typeof(T).GetMethod("Invoke");
             var parameters = invokeMethod.GetParameters();
@@ -155,16 +141,7 @@ namespace Expresso
                 expressoParameters[i] = new ExpressoParameter(parameterNames[i], parameters[i].ParameterType);
             }
 
-            var method = new ExpressoMethod(name, invokeMethod.ReturnType, expression, expressoParameters);
-
-            return method.ToMethodDeclarationSyntax();
-        }
-
-        private static T DelegateConverter<T>(Assembly assembly, string typeName, string memberName) where T : Delegate
-        {
-            var member = assembly.GetType(typeName).GetMember(memberName);
-
-            return (T) Delegate.CreateDelegate(typeof(T), null, (MethodInfo)member[0]);
+            return new ExpressoMethod(name, invokeMethod.ReturnType, expression, expressoParameters);
         }
 
         private static MethodDeclarationSyntax CreateMethodDeclarationSyntax(
@@ -196,57 +173,39 @@ namespace Expresso
             );
     }
 
+    public class NonNativeTypeTest
+    {
+        public int X { get; set; }
+
+        public NonNativeTypeTest(int x)
+        {
+            X = x;
+        }
+    }
+
     class Program
     {
-        public static T DelegateConverter<T>(Assembly assembly, string typeName, string memberName) where T: Delegate
-        {
-            var member = assembly.GetType(typeName).GetMember(memberName);
-
-            return (T) Delegate.CreateDelegate(typeof(T), null, (MethodInfo)member[0]);
-        }
-
-
-
         static void Main(string[] args)
         {
-            ExpressionCompiler.Test();
-            return;
-            //var statement = SyntaxFactory.ParseStatement("return 42;");
-            var expression = SyntaxFactory.ParseExpression("a * 21");
-
-            var dia = expression.GetDiagnostics();
-
-            var comp = SyntaxFactory.CompilationUnit().AddMembers
-                (
-                    SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName("InMemory")).AddMembers
-                    (
-                        SyntaxFactory.ClassDeclaration("CalcClass").AddMembers
-                        (
-                            SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(
-                                SyntaxFactory.Token(SyntaxKind.DoubleKeyword)), "Calc").AddModifiers
-                            (
-                                SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters
-                                (
-                                    SyntaxFactory.Parameter(SyntaxFactory.Identifier("a"))
-                                        .WithType(SyntaxFactory.ParseTypeName(typeof (int).FullName))
-                                )
-                                    .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(expression)))
-                            )
-                    )
-            );
-            
-            var plaplapla = typeof(void);
-
-            var bla = comp.NormalizeWhitespace().ToString();
-
-            // namespaceACO{classMainForm{System.Windows.Forms.TimerTicker{get;set;}publicvoidMain(){}}}
-
-            Console.WriteLine(bla);
-
-            Assembly assembly;
             try
             {
-                assembly = Compiler.Compile(comp.SyntaxTree);
+                var sw = new System.Diagnostics.Stopwatch();
+                sw.Start();
+                var calc1 = ExpressionCompiler.CompileExpression<Func<NonNativeTypeTest, double>>("x.X * 21", "x");
+                sw.Stop();
+
+                Console.WriteLine($"First compilation took {sw.Elapsed}");
+
+                sw.Reset();
+                sw.Start();
+                var calc2 = ExpressionCompiler.CompileExpression<Func<double, NonNativeTypeTest>>(
+                    "new Expresso.NonNativeTypeTest((int) x * 21)", "x");
+                sw.Stop();
+
+                Console.WriteLine($"Second compilation took {sw.Elapsed}");
+
+                Console.WriteLine(calc1(new NonNativeTypeTest(2)));
+                Console.WriteLine(calc2(4).X);
             }
             catch (CompilerException e)
             {
@@ -257,52 +216,7 @@ namespace Expresso
                 {
                     Console.Error.WriteLine("{0}: {1}", diagnostic.Id, diagnostic.GetMessage());
                 }
-
-                return;
             }
-
-            var calc = DelegateConverter<Func<int, double>>(assembly, "InMemory.CalcClass", "Calc");
-
-            Console.WriteLine(calc(2));
-
-            return;
-            var code =
-            @"
-                using System;
-
-                namespace RoslynCompileSample
-                {
-                    public class TestClass
-                    {
-                        public static int Compute(int x)
-                        {
-                            return x * 2;
-                        }
-                    }
-                }
-            ";
-
-            //Assembly assembly;
-            try
-            {
-                assembly = Compiler.Compile(code);
-            }
-            catch (CompilerException e)
-            {
-                var failures = e.Diagnostics.Where(diagnostic =>
-                    diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
-
-                foreach (Diagnostic diagnostic in failures)
-                {
-                    Console.Error.WriteLine("{0}: {1}", diagnostic.Id, diagnostic.GetMessage());
-                }
-
-                return;
-            }
-
-            var f = DelegateConverter<Func<int, int>>(assembly, "RoslynCompileSample.TestClass", "Compute");
-
-            Console.WriteLine(f(21));
         }
     }
 }
