@@ -5,7 +5,20 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.VisualBasic;
+//using Microsoft.CodeAnalysis.VisualBasic;
+
+
+namespace ACO
+{
+    class MainForm
+    {
+        public void Main()
+        {
+        }
+    }
+}
+
+
 
 namespace Expresso
 {
@@ -26,7 +39,15 @@ namespace Expresso
         {
             var syntaxTree = CSharpSyntaxTree.ParseText(code);
             //var syntaxTree = VisualBasicSyntaxTree.ParseText(code);
+            var bla = syntaxTree.ToString();
 
+            Console.WriteLine(bla);
+
+            return Compile(syntaxTree);
+        }
+
+        public static Assembly Compile(SyntaxTree syntaxTree)
+        {
             var references = new MetadataReference[]
             {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
@@ -67,6 +88,56 @@ namespace Expresso
 
         static void Main(string[] args)
         {
+            //var statement = SyntaxFactory.ParseStatement("return 42;");
+            var expression = SyntaxFactory.ParseExpression("42");
+
+            var comp = SyntaxFactory.CompilationUnit()
+                .AddMembers(
+                    SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName("InMemory"))
+                        .AddMembers(
+                        SyntaxFactory.ClassDeclaration("CalcClass")
+                            .AddMembers(
+                                // SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(
+                                //     SyntaxFactory.Token(SyntaxKind.VoidKeyword)), "Main")
+                                SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(
+                                    SyntaxFactory.Token(SyntaxKind.DoubleKeyword)), "Calc")
+                                //SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName("void"), "Main")
+                                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                                    //.WithBody(SyntaxFactory.Block(statement))
+                                    .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(expression)))
+                            )
+                    )
+            );
+
+            var bla = comp.NormalizeWhitespace().ToString();
+
+            // namespaceACO{classMainForm{System.Windows.Forms.TimerTicker{get;set;}publicvoidMain(){}}}
+
+            Console.WriteLine(bla);
+
+            Assembly assembly;
+            try
+            {
+                assembly = Compiler.Compile(comp.SyntaxTree);
+            }
+            catch (CompilerException e)
+            {
+                var failures = e.Diagnostics.Where(diagnostic =>
+                    diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
+
+                foreach (Diagnostic diagnostic in failures)
+                {
+                    Console.Error.WriteLine("{0}: {1}", diagnostic.Id, diagnostic.GetMessage());
+                }
+
+                return;
+            }
+
+            var calc = DelegateConverter<Func<double>>(assembly, "InMemory.CalcClass", "Calc");
+
+            Console.WriteLine(calc());
+
+            return;
             var code =
             @"
                 using System;
@@ -83,7 +154,7 @@ namespace Expresso
                 }
             ";
 
-            Assembly assembly;
+            //Assembly assembly;
             try
             {
                 assembly = Compiler.Compile(code);
