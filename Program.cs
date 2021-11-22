@@ -20,12 +20,24 @@ namespace Expresso
         {
             try
             {
+                var epVarA = new ExpressoVariable<int>("a", "2 * 6");
+
                 var sw = new System.Diagnostics.Stopwatch();
                 sw.Start();
-                var calc1 = ExpressoCompiler.CompileExpression<Func<NonNativeTypeTest, double>>("x.X * 21", "x");
+                var calc1 = ExpressoCompiler.CompileExpression<Func<NonNativeTypeTest, double>>(
+                    "a = x.X * 21 * a", new ExpressoVariable[] { epVarA }, "x");
                 sw.Stop();
 
                 Console.WriteLine($"First compilation took {sw.Elapsed}");
+
+                Console.WriteLine($"a = {(int) epVarA.Value}");
+                epVarA.Value = 2;
+                Console.WriteLine($"a = {(int) epVarA.Value}");
+
+                Console.WriteLine(calc1(new NonNativeTypeTest(2)));
+                Console.WriteLine($"a = {(int) epVarA.Value}");
+
+                return;
 
                 sw.Reset();
                 sw.Start();
@@ -55,6 +67,8 @@ namespace Expresso
             {
                 var failures = e.Diagnostics.Where(diagnostic =>
                     diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
+
+                Console.Error.WriteLine(e.Message);
 
                 foreach (Diagnostic diagnostic in failures)
                 {

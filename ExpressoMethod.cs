@@ -8,6 +8,8 @@ namespace Expresso
 {
     public class ExpressoMethod
     {
+        internal MethodDeclarationSyntax MethodDeclarationSyntax { get; }
+
         public Type DelegateType { get; }
         public string Name { get; }
         public Type ReturnType { get; }
@@ -25,7 +27,7 @@ namespace Expresso
         }
 
         public static ExpressoMethod Create<T>(string expression, params string[] parameterNames) where T : Delegate =>
-            CreateNamedMethod<T>($"_{Guid.NewGuid()}", expression, parameterNames);
+            CreateNamedMethod<T>($"_{Guid.NewGuid().ToString("N")}", expression, parameterNames);
 
         internal static ExpressoMethod CreateNamedMethod<T>(string name, string expression, params string[] parameterNames) where T : Delegate
         {

@@ -11,20 +11,34 @@ namespace Expresso
 {
     public class ExpressoCompiler
     {
-        public static T CompileExpression<T>(string expression, params string[] parameterNames) where T : Delegate
+        public static T CompileExpression<T>(string expression,
+            ExpressoVariable[] variables, params string[] parameterNames) where T : Delegate
         {
             var method = ExpressoMethod.CreateNamedMethod<T>("SingleMethod", expression, parameterNames);
-            var assembly = Compile("SingleNameSpace", "SingleClass", method);
+            var assembly = Compile("SingleNameSpace", "SingleClass", variables, method);
+            var assemblyType = assembly.GetType("SingleNameSpace.SingleClass");
 
-            return (T) DelegateFromMethod(assembly.GetType("SingleNameSpace.SingleClass"), method);
+            InitializeVariables(assemblyType, variables);
+
+            return (T) DelegateFromMethod(assemblyType, method);
         }
 
-        public static Delegate[] CompileExpressions(params ExpressoMethod[] methods)
+        public static T CompileExpression<T>(string expression,
+            params string[] parameterNames) where T : Delegate =>
+            CompileExpression<T>(expression, new ExpressoVariable[0], parameterNames);            
+
+        public static Delegate[] CompileExpressions(ExpressoVariable[] variables, params ExpressoMethod[] methods)
         {
-            var assembly = Compile("SingleNameSpace", "SingleClass", methods);
+            var assembly = Compile("SingleNameSpace", "SingleClass", variables, methods);
+            var assemblyType = assembly.GetType("SingleNameSpace.SingleClass");
+
+            InitializeVariables(assemblyType, variables);
             
-            return methods.Select(x => DelegateFromMethod(assembly.GetType("SingleNameSpace.SingleClass"), x)).ToArray();
+            return methods.Select(x => DelegateFromMethod(assemblyType, x)).ToArray();
         }
+
+        public static Delegate[] CompileExpressions(params ExpressoMethod[] methods) =>
+            CompileExpressions(new ExpressoVariable[0], methods);
 
         private static Delegate DelegateFromMethod(Type type, ExpressoMethod method)
         {
@@ -34,21 +48,41 @@ namespace Expresso
             return Delegate.CreateDelegate(method.DelegateType, null, methodInfo);
         }
 
+        private static void InitializeVariables(Type type, ExpressoVariable[] variables)
+        {
+            foreach(var variable in variables)
+            {
+                variable.Init(type.GetProperty(variable.Name));
+            }
+        }
+
         private static Assembly Compile(string namespaceName, string className,
-            params ExpressoMethod[] methods)
+            ExpressoVariable[] variables, params ExpressoMethod[] methods)
         {
             var allTypes = new HashSet<Type>(methods
                 .SelectMany(x => x.Parameters.Select(x => x.Type))
                 .Concat(methods.Select(x => x.ReturnType))
+                .Concat(variables.Select(x => x.Type))
                 .Append(typeof(object)));
 
             var compilationUnit = CreateCompilationUnitSyntax(
-                namespaceName, className, methods);
+                namespaceName, className, variables, methods);
 
-            //System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
+            System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
 
             return Compile(compilationUnit.SyntaxTree, allTypes);
         }
+
+        private static CompilationUnitSyntax CreateCompilationUnitSyntax(string nameSpaceName, string className,
+            ExpressoVariable[] variables, ExpressoMethod[] methods) =>
+            SyntaxFactory.CompilationUnit().AddUsings(
+                SyntaxFactory.UsingDirective(SyntaxFactory.Token(SyntaxKind.StaticKeyword),
+                    null, SyntaxFactory.ParseName("System.Math")))
+                .AddMembers(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(nameSpaceName)).AddMembers(
+                    SyntaxFactory.ClassDeclaration(className).AddMembers(
+                        variables.Select(x => (MemberDeclarationSyntax)x.ToPropertyDeclarationSyntax())
+                            .Concat(methods.Select(x => (MemberDeclarationSyntax)x.ToMethodDeclarationSyntax())).ToArray()
+                    )));
 
         private static Assembly Compile(SyntaxTree syntaxTree, IEnumerable<Type> usedTypes)
         {
@@ -73,12 +107,5 @@ namespace Expresso
                 return Assembly.Load(ms.ToArray());
             }
         }
-
-        private static CompilationUnitSyntax CreateCompilationUnitSyntax(string nameSpaceName, string className,
-            params ExpressoMethod[] methods) =>
-            SyntaxFactory.CompilationUnit().AddMembers(
-                SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(nameSpaceName)).AddMembers(
-                    SyntaxFactory.ClassDeclaration(className).AddMembers(
-                        methods.Select(x => x.ToMethodDeclarationSyntax()).ToArray())));
     }
 }
