@@ -43,7 +43,7 @@ namespace Expresso
         private static Delegate DelegateFromMethod(Type type, ExpressoMethod method)
         {
             var parameterTypes = method.Parameters.Select(x => x.Type).ToArray();
-            var methodInfo = type.GetMethod(method.Name, 0, parameterTypes);
+            var methodInfo = type.GetMethod(method.Name, parameterTypes);
 
             return Delegate.CreateDelegate(method.DelegateType, null, methodInfo);
         }
@@ -60,7 +60,7 @@ namespace Expresso
             ExpressoVariable[] variables, params ExpressoMethod[] methods)
         {
             var allTypes = new HashSet<Type>(methods
-                .SelectMany(x => x.Parameters.Select(x => x.Type))
+                .SelectMany(x => x.Parameters.Select(y => y.Type))
                 .Concat(methods.Select(x => x.ReturnType))
                 .Concat(variables.Select(x => x.Type))
                 .Append(typeof(object)));
