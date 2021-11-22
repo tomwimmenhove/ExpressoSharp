@@ -9,11 +9,11 @@ namespace Expresso
 {
     public abstract class ExpressoVariable
     {
-        internal PropertyDeclarationSyntax SyntaxNode { get; }
-        internal abstract void Init(PropertyInfo property);
-
         public string Name { get; }
         public Type Type { get; }
+
+        internal PropertyDeclarationSyntax SyntaxNode { get; }
+        internal abstract void Init(PropertyInfo property);
 
         internal ExpressoVariable(string name, string initialValue, Type type)
         {

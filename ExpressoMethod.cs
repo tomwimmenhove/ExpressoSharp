@@ -8,13 +8,34 @@ namespace Expresso
 {
     public class ExpressoMethod
     {
+        public string Name { get; }
+        public string Expression { get; }
+        public ExpressoParameter[] Parameters { get; }
+        public Type ReturnType { get; }
+
+        internal Type DelegateType { get; }
         internal MethodDeclarationSyntax SyntaxNode { get; }
 
-        public Type DelegateType { get; }
-        public string Name { get; }
-        public Type ReturnType { get; }
-        public string Expression { get;}
-        public ExpressoParameter[] Parameters { get; }
+        public static ExpressoMethod Create<T>(string expression, params string[] parameterNames) where T : Delegate =>
+             CreateNamedMethod<T>($"_{Guid.NewGuid().ToString("N")}", expression, parameterNames);
+
+        internal static ExpressoMethod CreateNamedMethod<T>(string name, string expression, params string[] parameterNames) where T : Delegate
+        {
+            var invokeMethod = typeof(T).GetMethod("Invoke");
+            var parameters = invokeMethod.GetParameters();
+            if (parameters.Count() != parameterNames.Count())
+            {
+                throw new ArgumentException($"Number of parameter names ({parameters.Count()}) does not match the numbers of parameters of the delegate type ({parameterNames.Count()})");
+            }
+
+            var expressoParameters = new ExpressoParameter[parameters.Count()];
+            for (var i = 0; i < parameters.Count(); i++)
+            {
+                expressoParameters[i] = new ExpressoParameter(parameterNames[i], parameters[i].ParameterType);
+            }
+
+            return new ExpressoMethod(typeof(T), name, invokeMethod.ReturnType, expression, expressoParameters);
+        }
 
         private ExpressoMethod(Type delegateType, string name, Type returnType, string expression,
             params ExpressoParameter[] parameters)
@@ -38,27 +59,6 @@ namespace Expresso
                 SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
                     Parameters.Select(x => x.ToParameterSyntax()).ToArray())
                 .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(returnStatement)));
-        }
-
-        public static ExpressoMethod Create<T>(string expression, params string[] parameterNames) where T : Delegate =>
-            CreateNamedMethod<T>($"_{Guid.NewGuid().ToString("N")}", expression, parameterNames);
-
-        internal static ExpressoMethod CreateNamedMethod<T>(string name, string expression, params string[] parameterNames) where T : Delegate
-        {
-            var invokeMethod = typeof(T).GetMethod("Invoke");
-            var parameters = invokeMethod.GetParameters();
-            if (parameters.Count() != parameterNames.Count())
-            {
-                throw new ArgumentException($"Number of parameter names ({parameters.Count()}) does not match the numbers of parameters of the delegate type ({parameterNames.Count()})");
-            }
-
-            var expressoParameters = new ExpressoParameter[parameters.Count()];
-            for (var i = 0; i < parameters.Count(); i++)
-            {
-                expressoParameters[i] = new ExpressoParameter(parameterNames[i], parameters[i].ParameterType);
-            }
-
-            return new ExpressoMethod(typeof(T), name, invokeMethod.ReturnType, expression, expressoParameters);
         }
     }
 }
