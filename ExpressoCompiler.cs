@@ -15,48 +15,32 @@ namespace Expresso
         {
             var method = ExpressoMethod.CreateNamedMethod<T>("SingleMethod", expression, parameterNames);
             var assembly = Compile("SingleNameSpace", "SingleClass", method);
-            var parameterTypes = method.Parameters.Select(x => x.Type).ToArray();
-            var singleMethod = assembly.GetType("SingleNameSpace.SingleClass")
-                .GetMethod("SingleMethod", 0, parameterTypes);
 
-            return (T) Delegate.CreateDelegate(typeof(T), null, singleMethod);
+            return (T) DelegateFromMethod(assembly.GetType("SingleNameSpace.SingleClass"), method);
         }
 
         public static Delegate[] CompileExpressions(params ExpressoMethod[] methods)
         {
             var assembly = Compile("SingleNameSpace", "SingleClass", methods);
             
-            var delegates = new Delegate[methods.Length];
-            for (var i = 0; i < methods.Length; i++)
-            {
-                var method = methods[i];
-                var parameterTypes = method.Parameters.Select(x => x.Type).ToArray();
-                var methodInfo = assembly.GetType("SingleNameSpace.SingleClass")
-                    .GetMethod(methods[i].Name, 0, parameterTypes);
+            return methods.Select(x => DelegateFromMethod(assembly.GetType("SingleNameSpace.SingleClass"), x)).ToArray();
+        }
 
-                delegates[i] = Delegate.CreateDelegate(method.DelegateType, null, methodInfo);                
-            }
+        private static Delegate DelegateFromMethod(Type type, ExpressoMethod method)
+        {
+            var parameterTypes = method.Parameters.Select(x => x.Type).ToArray();
+            var methodInfo = type.GetMethod(method.Name, 0, parameterTypes);
 
-            return delegates;
+            return Delegate.CreateDelegate(method.DelegateType, null, methodInfo);
         }
 
         private static Assembly Compile(string namespaceName, string className,
             params ExpressoMethod[] methods)
         {
-            var allTypes = new HashSet<Type>();
-            foreach (var method in methods)
-            {
-                foreach(var parameter in method.Parameters)
-                {
-                    allTypes.Add(parameter.Type);
-                }
-
-                if (method.ReturnType != typeof(void))
-                {
-                    allTypes.Add(method.ReturnType);
-                }
-            }
-            allTypes.Add(typeof(object));
+            var allTypes = new HashSet<Type>(methods
+                .SelectMany(x => x.Parameters.Select(x => x.Type))
+                .Concat(methods.Select(x => x.ReturnType))
+                .Append(typeof(object)));
 
             var compilationUnit = CreateCompilationUnitSyntax(
                 namespaceName, className, methods);
