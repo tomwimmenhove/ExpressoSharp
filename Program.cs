@@ -63,17 +63,13 @@ namespace Expresso
                 Console.WriteLine(calc1(new NonNativeTypeTest(2)));
                 Console.WriteLine(calc2(4).X);
             }
+            catch (ParserException e)
+            {
+                Console.Error.WriteLine($"Parse erro: {e.Message}");
+            }
             catch (CompilerException e)
             {
-                var failures = e.Diagnostics.Where(diagnostic =>
-                    diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
-
-                Console.Error.WriteLine(e.Message);
-
-                foreach (Diagnostic diagnostic in failures)
-                {
-                    Console.Error.WriteLine("{0}: {1}", diagnostic.Id, diagnostic.GetMessage());
-                }
+                Console.Error.WriteLine($"Compile error: {e.Message}");
             }
         }
     }

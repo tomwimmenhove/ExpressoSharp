@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -35,11 +36,12 @@ namespace Expresso
             if (_initialValue!= null)
             {
                 var initialExpression = SyntaxFactory.ParseExpression(_initialValue);
-                var expressionDiagnostics = initialExpression.GetDiagnostics();
+                var errors = initialExpression.GetDiagnostics()
+                    .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
 
-                if (expressionDiagnostics.Any())
+                if (errors.Any())
                 {
-                    throw new CompilerException("Compilation failed", expressionDiagnostics);
+                    throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
                 }
 
                 return syntax.WithInitializer(SyntaxFactory.EqualsValueClause(SyntaxFactory.ParseExpression(_initialValue)))

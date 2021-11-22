@@ -50,11 +50,12 @@ namespace Expresso
         internal MethodDeclarationSyntax ToMethodDeclarationSyntax()
         {
             var returnStatement = SyntaxFactory.ParseExpression(Expression);
-            var expressionDiagnostics = returnStatement.GetDiagnostics();
+            var errors = returnStatement.GetDiagnostics()
+                .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
 
-            if (expressionDiagnostics.Any())
+            if (errors.Any())
             {
-                throw new CompilerException("Compilation failed", expressionDiagnostics);
+                throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
             }
 
             return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName(ReturnType.FullName), Name).AddModifiers(

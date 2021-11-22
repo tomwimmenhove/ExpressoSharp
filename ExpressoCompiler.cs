@@ -99,7 +99,10 @@ namespace Expresso
                 var result = compilation.Emit(ms);
                 if (!result.Success)
                 {
-                    throw new CompilerException("Compilation failed", result.Diagnostics);
+                    var message = string.Join("\n",
+                        result.Diagnostics.Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error)
+                            .Select(x => x.GetMessage()));
+                    throw new CompilerException(message);
                 }
 
                 ms.Seek(0, SeekOrigin.Begin);
