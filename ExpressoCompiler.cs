@@ -80,8 +80,8 @@ namespace Expresso
                     null, SyntaxFactory.ParseName("System.Math")))
                 .AddMembers(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(nameSpaceName)).AddMembers(
                     SyntaxFactory.ClassDeclaration(className).AddMembers(
-                        variables.Select(x => (MemberDeclarationSyntax)x.ToPropertyDeclarationSyntax())
-                            .Concat(methods.Select(x => (MemberDeclarationSyntax)x.ToMethodDeclarationSyntax())).ToArray()
+                        variables.Select(x => (MemberDeclarationSyntax)x.SyntaxNode)
+                            .Concat(methods.Select(x => (MemberDeclarationSyntax)x.SyntaxNode)).ToArray()
                     )));
 
         private static Assembly Compile(SyntaxTree syntaxTree, IEnumerable<Type> usedTypes)

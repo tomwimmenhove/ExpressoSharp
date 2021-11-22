@@ -9,8 +9,7 @@ namespace Expresso
 {
     public abstract class ExpressoVariable
     {
-        private string _initialValue;
-
+        internal PropertyDeclarationSyntax SyntaxNode { get; }
         internal abstract void Init(PropertyInfo property);
 
         public string Name { get; }
@@ -19,13 +18,9 @@ namespace Expresso
         internal ExpressoVariable(string name, string initialValue, Type type)
         {
             Name = name;
-            _initialValue = initialValue;
             Type = type;
-        }
 
-        internal PropertyDeclarationSyntax ToPropertyDeclarationSyntax()
-        {
-            var syntax = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(Type.FullName), Name)
+            SyntaxNode = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(Type.FullName), Name)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddAccessorListAccessors(
                     SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
@@ -33,9 +28,9 @@ namespace Expresso
                     SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
                         
-            if (_initialValue!= null)
+            if (initialValue!= null)
             {
-                var initialExpression = SyntaxFactory.ParseExpression(_initialValue);
+                var initialExpression = SyntaxFactory.ParseExpression(initialValue);
                 var errors = initialExpression.GetDiagnostics()
                     .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
 
@@ -44,11 +39,9 @@ namespace Expresso
                     throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
                 }
 
-                return syntax.WithInitializer(SyntaxFactory.EqualsValueClause(SyntaxFactory.ParseExpression(_initialValue)))
+                SyntaxNode.WithInitializer(SyntaxFactory.EqualsValueClause(initialExpression))
                     .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
             }
-
-            return syntax;
         }
     }
 

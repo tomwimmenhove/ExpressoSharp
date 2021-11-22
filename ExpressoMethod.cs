@@ -8,7 +8,7 @@ namespace Expresso
 {
     public class ExpressoMethod
     {
-        internal MethodDeclarationSyntax MethodDeclarationSyntax { get; }
+        internal MethodDeclarationSyntax SyntaxNode { get; }
 
         public Type DelegateType { get; }
         public string Name { get; }
@@ -24,6 +24,20 @@ namespace Expresso
             ReturnType = returnType;
             Expression = expression;
             Parameters = parameters;
+
+            var returnStatement = SyntaxFactory.ParseExpression(Expression);
+            var errors = returnStatement.GetDiagnostics()
+                .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
+
+            if (errors.Any())
+            {
+                throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
+            }
+
+            SyntaxNode = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName(ReturnType.FullName), Name).AddModifiers(
+                SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
+                    Parameters.Select(x => x.ToParameterSyntax()).ToArray())
+                .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(returnStatement)));
         }
 
         public static ExpressoMethod Create<T>(string expression, params string[] parameterNames) where T : Delegate =>
@@ -45,23 +59,6 @@ namespace Expresso
             }
 
             return new ExpressoMethod(typeof(T), name, invokeMethod.ReturnType, expression, expressoParameters);
-        }
-
-        internal MethodDeclarationSyntax ToMethodDeclarationSyntax()
-        {
-            var returnStatement = SyntaxFactory.ParseExpression(Expression);
-            var errors = returnStatement.GetDiagnostics()
-                .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
-
-            if (errors.Any())
-            {
-                throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
-            }
-
-            return SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName(ReturnType.FullName), Name).AddModifiers(
-                SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
-                    Parameters.Select(x => x.ToParameterSyntax()).ToArray())
-                .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(returnStatement)));
         }
     }
 }
