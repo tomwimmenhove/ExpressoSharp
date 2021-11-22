@@ -28,7 +28,7 @@ namespace Expresso
                     SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
                         
-            if (initialValue!= null)
+            if (initialValue != null)
             {
                 var initialExpression = SyntaxFactory.ParseExpression(initialValue);
                 var errors = initialExpression.GetDiagnostics()
@@ -39,7 +39,7 @@ namespace Expresso
                     throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
                 }
 
-                SyntaxNode.WithInitializer(SyntaxFactory.EqualsValueClause(initialExpression))
+                SyntaxNode = SyntaxNode.WithInitializer(SyntaxFactory.EqualsValueClause(initialExpression))
                     .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
             }
         }

@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{17
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simple", "Examples\Simple\Simple.csproj", "{EB64C976-6ADC-476E-8CF2-22E0F12B71C1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Calculator", "Examples\Calculator\Calculator.csproj", "{A1B907C6-FDC2-4408-A305-87B09D3634DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,8 +48,21 @@ Global
 		{EB64C976-6ADC-476E-8CF2-22E0F12B71C1}.Release|x64.Build.0 = Release|Any CPU
 		{EB64C976-6ADC-476E-8CF2-22E0F12B71C1}.Release|x86.ActiveCfg = Release|Any CPU
 		{EB64C976-6ADC-476E-8CF2-22E0F12B71C1}.Release|x86.Build.0 = Release|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Debug|x64.Build.0 = Debug|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Debug|x86.Build.0 = Debug|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Release|x64.ActiveCfg = Release|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Release|x64.Build.0 = Release|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Release|x86.ActiveCfg = Release|Any CPU
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{EB64C976-6ADC-476E-8CF2-22E0F12B71C1} = {17E56379-399E-490A-A658-97DFF7975149}
+		{A1B907C6-FDC2-4408-A305-87B09D3634DC} = {17E56379-399E-490A-A658-97DFF7975149}
 	EndGlobalSection
 EndGlobal
