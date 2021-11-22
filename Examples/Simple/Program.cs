@@ -1,46 +1,37 @@
 ﻿using System;
-using System.Linq;
-using Microsoft.CodeAnalysis;
+using Expresso;
 
-namespace Expresso
+namespace Simple
 {
-    public class NonNativeTypeTest
-    {
-        public int X { get; set; }
-
-        public NonNativeTypeTest(int x)
-        {
-            X = x;
-        }
-    }
-
     class Program
     {
         static void Main(string[] args)
         {
             try
             {
-                var calc1 = ExpressoCompiler.CompileExpression<Func<NonNativeTypeTest, double>>(
-                    "a = x.X * 21 * a", "x");
+                /* We can use ExpressoCompiler.CompileExpression<T>() in order to compile an expression into
+                 * a funciton with one single line */
+                var calc1 = ExpressoCompiler.CompileExpression<Func<double, double>>("x * 21", "x");
 
-                var calc2 = ExpressoCompiler.CompileExpression<Func<double, NonNativeTypeTest>>(
-                    "new Expresso.NonNativeTypeTest((int) x * 21)", "x");
+                /* The same function will also accept custom types as parameter or return value. Any necessary
+                 * assemblies will automatically be referenced */
+                var calc2 = ExpressoCompiler.CompileExpression<Func<NonNativeTypeTest, double>>("x.X * 21", "x");
 
+                Console.WriteLine(calc1(1));
+                Console.WriteLine(calc2(new NonNativeTypeTest(2)));
+
+                /* We can also compile multiple expressions simultaniously. This will result in an array of delegates. */
                 var multi = ExpressoCompiler.CompileExpressions(                    
-                    ExpressoMethod.Create<Func<NonNativeTypeTest, double>>(
-                        "x.X * 21", "x"),
-                    ExpressoMethod.Create<Func<double, NonNativeTypeTest>>(
-                        "new Expresso.NonNativeTypeTest((int) x * 21)", "x")
+                    ExpressoMethod.Create<Func<double, double>>("x * 21", "x"),
+                    ExpressoMethod.Create<Func<NonNativeTypeTest, double>>("x.X * 21", "x")
                 );
 
-                Console.WriteLine(calc1(new NonNativeTypeTest(2)));
-                Console.WriteLine(calc2(4).X);
+                /* We can simply cast the delecations to Func<,> types and then cann them as if they're normal functions. */
+                calc1 = (Func<double, double>) multi[0];
+                calc2 = (Func<NonNativeTypeTest, double>) multi[1];
 
-                calc1 = (Func<NonNativeTypeTest, double>) multi[0];
-                calc2 = (Func<double, NonNativeTypeTest>) multi[1];
-
-                Console.WriteLine(calc1(new NonNativeTypeTest(2)));
-                Console.WriteLine(calc2(4).X);
+                Console.WriteLine(calc1(3));
+                Console.WriteLine(calc2(new NonNativeTypeTest(4)));
             }
             catch (ParserException e)
             {
