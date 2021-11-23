@@ -15,6 +15,15 @@ namespace Expresso
         internal PropertyDeclarationSyntax SyntaxNode { get; }
         internal abstract void Init(PropertyInfo property);
 
+        public static ExpressoVariable<T> Create<T>(string name) =>
+            new ExpressoVariable<T>(name, null);
+
+        public static ExpressoVariable<T> Create<T>(string name, T initialValue) =>
+            new ExpressoVariable<T>(name, initialValue, true);
+
+        public static ExpressoVariable<T> CreateWithInitializer<T>(string name, string initializer) =>
+            new ExpressoVariable<T>(name, initializer);
+
         internal ExpressoVariable(string name, string initialValue, Type type)
         {
             Name = name;
@@ -55,26 +64,23 @@ namespace Expresso
 
         private Func<T> _getter = () => throw new NotSupportedException("This variable has not yet been initialized");
         private Action<T> _setter = (value) => throw new NotSupportedException("This variable has not yet been initialized");
-        private T _dummyValue;
+        private T _initialValue;
         private bool _isInitialized;
 
-        public ExpressoVariable(string name, T initialValue = default)
-            : this(name, null, typeof(T))
-        {
-            _dummyValue = initialValue;
-
-            _getter = () => _dummyValue;
-            _setter = (value) => _dummyValue = value;
-
-            _isInitialized = true;
-        }
-
-        public static ExpressoVariable<T> CreateWithExpression(string name, string initialValue) =>
-            new ExpressoVariable<T>(name, initialValue, typeof(T));
-
-        private ExpressoVariable(string name, string initialValue, Type type)
-            : base(name, initialValue, type)
+        internal ExpressoVariable(string name, string initializer)
+            : base(name, initializer, typeof(T))
         { }
+
+        internal ExpressoVariable(string name, T initialValue, bool initialized)
+            : base(name, null, typeof(T))
+        {
+            _initialValue = initialValue;
+
+            _getter = () => _initialValue;
+            _setter = (value) => _initialValue = value;
+
+            _isInitialized = initialized;
+        }
 
         internal override void Init(PropertyInfo property)
         {

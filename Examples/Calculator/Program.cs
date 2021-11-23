@@ -11,7 +11,7 @@ namespace Calculator
         static void Main(string[] args)
         {
             /* A regular expression that matches variable assignments */
-            var regex = new Regex(@"^\s*([a-zA-Z_$][a-zA-Z_$0-9]*)\s\=.*", RegexOptions.Compiled);
+            var regex = new Regex(@"^\s*([a-zA-Z_$][a-zA-Z_$0-9]*)\s*\=\s*(.*)$", RegexOptions.Compiled);
 
             /* A list of variables used */
             var variables = new List<ExpressoVariable<double>>();
@@ -32,39 +32,59 @@ namespace Calculator
                     break;
                 }
 
-                /* Check if the expression contains a variable assignment. */
+                /* Check if the expression is a variable assignment. */
                 var match = regex.Match(line);
+                string assignTo = null;
+                var expression = line;
                 if (match.Success)
                 {
-                    var name = match.Groups[1].ToString();
-
-                    /* If the variable doesn't already exist, add it */
-                    if (!variables.Any(x => x.Name == name))
-                    {
-                        variables.Add(new ExpressoVariable<double>(name));
-                    }
+                    assignTo   = match.Groups[1].ToString();
+                    expression = match.Groups[2].ToString();
                 }
-
+                
+                double result;
                 try
                 {
                     /* Compile the expression */
-                    var f = ExpressoCompiler.CompileExpression<Func<double>>(line, variables.ToArray());
+                    var f = ExpressoCompiler.CompileExpression<Func<double>>(expression, variables.ToArray());
 
-                    /* Print the result */
-                    Console.WriteLine(f());
+                    /* Run the compiled function and get the result */
+                    result = f();
                 }
                 catch (ParserException e)
                 {
                     Console.Error.WriteLine($"Parse erro: {e.Message}");
+                    continue;
                 }
                 catch (CompilerException e)
                 {
                     Console.Error.WriteLine($"Compile error: {e.Message}");
+                    continue;
                 }
                 catch (Exception e)
                 {
                     Console.Error.WriteLine($"Unknown error: {e.Message}");
+                    continue;
                 }
+
+                /* If it was an assignment, find the variable and store the result */
+                if (assignTo != null)
+                {
+                    var variable = variables.FirstOrDefault(x => x.Name == assignTo);
+                    /* If the variable already exists; assign the result. */
+                    if (variable != null)
+                    {
+                        variable.Value = result;
+                    }
+                    /* If the variable doesn't already exist, add it with the result as it's initial value. */
+                    else
+                    {
+                        variables.Add(ExpressoVariable.Create<double>(assignTo, result));
+                    }
+                }
+
+                /* Print the result */
+                Console.WriteLine(result);
             }
         }
     }
