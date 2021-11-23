@@ -40,6 +40,8 @@ namespace Expresso
         public static Delegate[] CompileExpressions(params ExpressoMethod[] methods) =>
             CompileExpressions(new ExpressoVariable[0], methods);
 
+        public static void Prime() => CompileExpression<Func<object>>("null");
+
         private static Delegate DelegateFromMethod(Type type, ExpressoMethod method)
         {
             var parameterTypes = method.Parameters.Select(x => x.Type).ToArray();

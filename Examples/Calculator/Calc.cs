@@ -26,6 +26,10 @@ namespace Calculator
                 { "exit", Exit },
                 { "quit", Exit },
             };
+
+            Console.Write("Initializing...");
+            ExpressoCompiler.Prime();
+            Console.WriteLine("Done");
         }
 
         private bool ShowVariables()
