@@ -46,8 +46,8 @@ namespace Expresso
             Expression = expression;
             Parameters = parameters;
 
-            var returnStatement = SyntaxFactory.ParseExpression(Expression);
-            var errors = returnStatement.GetDiagnostics()
+            var parsedExpression = SyntaxFactory.ParseExpression(Expression);
+            var errors = parsedExpression.GetDiagnostics()
                 .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
 
             if (errors.Any())
@@ -55,10 +55,23 @@ namespace Expresso
                 throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
             }
 
-            SyntaxNode = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName(ReturnType.FullName), Name).AddModifiers(
-                SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
-                    Parameters.Select(x => x.ToParameterSyntax()).ToArray())
-                .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(returnStatement)));
+            if (returnType == typeof(void))
+            {
+                SyntaxNode = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(
+                    SyntaxFactory.Token(SyntaxKind.VoidKeyword)), Name)
+                    .AddModifiers(
+                        SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
+                            Parameters.Select(x => x.ToParameterSyntax()).ToArray())
+                        .WithBody(SyntaxFactory.Block(SyntaxFactory.ExpressionStatement(parsedExpression)));
+            }
+            else
+            {
+                SyntaxNode = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName(ReturnType.FullName), Name)
+                    .AddModifiers(
+                        SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
+                            Parameters.Select(x => x.ToParameterSyntax()).ToArray())
+                        .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(parsedExpression)));
+            }
         }
     }
 }
