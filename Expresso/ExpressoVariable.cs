@@ -53,11 +53,27 @@ namespace Expresso
             set => _setter(value);
         }
 
-        private Func<T> _getter;
-        private Action<T> _setter;
+        private Func<T> _getter = () => throw new NotSupportedException("This variable has not yet been initialized");
+        private Action<T> _setter = (value) => throw new NotSupportedException("This variable has not yet been initialized");
+        private T _dummyValue;
+        private bool _isInitialized;
 
-        public ExpressoVariable(string name, string initialValue = null)
-            : base(name, initialValue, typeof(T))
+        public ExpressoVariable(string name, T initialValue = default)
+            : this(name, null, typeof(T))
+        {
+            _dummyValue = initialValue;
+
+            _getter = () => _dummyValue;
+            _setter = (value) => _dummyValue = value;
+
+            _isInitialized = true;
+        }
+
+        public static ExpressoVariable<T> CreateWithExpression(string name, string initialValue) =>
+            new ExpressoVariable<T>(name, initialValue, typeof(T));
+
+        private ExpressoVariable(string name, string initialValue, Type type)
+            : base(name, initialValue, type)
         { }
 
         internal override void Init(PropertyInfo property)
@@ -66,7 +82,7 @@ namespace Expresso
             var setter = (Action<T>) Delegate.CreateDelegate(typeof(Action<T>), property.GetSetMethod());
 
             /* Copy the old value in case this variable has been used before */
-            if (_getter != null)
+            if (_isInitialized)
             {
                 var oldValue = _getter();
                 setter(oldValue);
@@ -74,6 +90,8 @@ namespace Expresso
 
             _getter = getter;
             _setter = setter;
+
+            _isInitialized = true;
         }
     }
 }
