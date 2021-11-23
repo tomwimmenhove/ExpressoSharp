@@ -12,7 +12,7 @@ namespace Expresso
     public class ExpressoCompiler
     {
         public static T CompileExpression<T>(string expression,
-            ExpressoVariable[] variables, params string[] parameterNames) where T : Delegate
+            ICollection<ExpressoVariable> variables, params string[] parameterNames) where T : Delegate
         {
             var method = ExpressoMethod.CreateNamedMethod<T>("SingleMethod", expression, parameterNames);
             var assembly = Compile("SingleNameSpace", "SingleClass", variables, method);
@@ -27,7 +27,7 @@ namespace Expresso
             params string[] parameterNames) where T : Delegate =>
             CompileExpression<T>(expression, new ExpressoVariable[0], parameterNames);            
 
-        public static Delegate[] CompileExpressions(ExpressoVariable[] variables, params ExpressoMethod[] methods)
+        public static Delegate[] CompileExpressions(ICollection<ExpressoVariable> variables, params ExpressoMethod[] methods)
         {
             var assembly = Compile("SingleNameSpace", "SingleClass", variables, methods);
             var assemblyType = assembly.GetType("SingleNameSpace.SingleClass");
@@ -48,7 +48,7 @@ namespace Expresso
             return Delegate.CreateDelegate(method.DelegateType, null, methodInfo);
         }
 
-        private static void InitializeVariables(Type type, ExpressoVariable[] variables)
+        private static void InitializeVariables(Type type, ICollection<ExpressoVariable> variables)
         {
             foreach(var variable in variables)
             {
@@ -57,7 +57,7 @@ namespace Expresso
         }
 
         private static Assembly Compile(string namespaceName, string className,
-            ExpressoVariable[] variables, params ExpressoMethod[] methods)
+            ICollection<ExpressoVariable> variables, params ExpressoMethod[] methods)
         {
             var allTypes = new HashSet<Type>(methods
                 .SelectMany(x => x.Parameters.Select(y => y.Type))
@@ -74,7 +74,7 @@ namespace Expresso
         }
 
         private static CompilationUnitSyntax CreateCompilationUnitSyntax(string nameSpaceName, string className,
-            ExpressoVariable[] variables, ExpressoMethod[] methods) =>
+            ICollection<ExpressoVariable> variables, ExpressoMethod[] methods) =>
             SyntaxFactory.CompilationUnit().AddUsings(
                 SyntaxFactory.UsingDirective(SyntaxFactory.Token(SyntaxKind.StaticKeyword),
                     null, SyntaxFactory.ParseName("System.Math")))
