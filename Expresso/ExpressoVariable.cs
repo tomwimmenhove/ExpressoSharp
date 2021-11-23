@@ -62,8 +62,18 @@ namespace Expresso
 
         internal override void Init(PropertyInfo property)
         {
-            _getter = (Func<T>) Delegate.CreateDelegate(typeof(Func<T>), property.GetGetMethod());
-            _setter = (Action<T>) Delegate.CreateDelegate(typeof(Action<T>), property.GetSetMethod());
+            var getter = (Func<T>) Delegate.CreateDelegate(typeof(Func<T>), property.GetGetMethod());
+            var setter = (Action<T>) Delegate.CreateDelegate(typeof(Action<T>), property.GetSetMethod());
+
+            /* Copy the old value in case this variable has been used before */
+            if (_getter != null)
+            {
+                var oldValue = _getter();
+                setter(oldValue);
+            }
+
+            _getter = getter;
+            _setter = setter;
         }
     }
 }

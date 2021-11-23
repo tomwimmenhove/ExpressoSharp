@@ -52,10 +52,6 @@ namespace Calculator
 
                     /* Print the result */
                     Console.WriteLine(f());
-
-                    /* Generate a new list of variables for the next compilation
-                     * and initialize them with the value of the previous list */
-                    variables = variables.Select(x => new ExpressoVariable<double>(x.Name, x.Value.ToString())).ToList();
                 }
                 catch (ParserException e)
                 {
