@@ -62,7 +62,7 @@ namespace Expresso
         {
             foreach(var variable in variables)
             {
-                variable.Init(type.GetProperty(variable.Name));
+                variable.Init(type);
             }
         }
 
@@ -88,7 +88,7 @@ namespace Expresso
 
             var compilationUnit = CreateCompilationUnitSyntax(namespaceName, className, variables, methods);
 
-            System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
+            //System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
 
             return Compile(compilationUnit.SyntaxTree, usedAssemblies);
         }
@@ -100,7 +100,10 @@ namespace Expresso
                     null, SyntaxFactory.ParseName("System.Math")))
                 .AddMembers(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(nameSpaceName)).AddMembers(
                     SyntaxFactory.ClassDeclaration(className).AddMembers(
-                        variables.Select(x => (MemberDeclarationSyntax)x.SyntaxNode)
+                        variables.Select(x => (MemberDeclarationSyntax)x.PropertySyntaxNode)
+
+                            .Concat(variables.Select(x => (MemberDeclarationSyntax)x.FieldSyntaxNode))
+
                             .Concat(methods.Select(x => (MemberDeclarationSyntax)x.SyntaxNode)).ToArray()
                     )));
 

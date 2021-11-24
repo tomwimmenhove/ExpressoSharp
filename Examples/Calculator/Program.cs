@@ -8,7 +8,7 @@ namespace Calculator
         {
             if (args.Length > 1)
             {
-                Console.Error.WriteLine("The only accepted argument is the name of the sytem type to use.");
+                Console.Error.WriteLine("The only accepted argument is the name of the system type to use.");
                 Environment.Exit(1);
             }
 
@@ -41,8 +41,8 @@ namespace Calculator
             Console.WriteLine($"Using type: {valueType}");
 
             var calcType = typeof(Calc<>).MakeGenericType(valueType);
-            var instance = Activator.CreateInstance(calcType);
-            instance.GetType().GetMethod(nameof(Calc<object>.Run)).Invoke(instance, new object[] { false });
+            var instance = Activator.CreateInstance(calcType, args: new object[] { false });
+            instance.GetType().GetMethod(nameof(Calc<object>.Run)).Invoke(instance, null);
         }
     }
 }
