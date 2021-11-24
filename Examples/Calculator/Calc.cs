@@ -12,7 +12,7 @@ namespace Calculator
         private static Regex regex = new Regex(@"^\s*([a-zA-Z_$][a-zA-Z_$0-9]*)\s*\=\s*(.*)$", RegexOptions.Compiled);
 
         /* A list of variables used */
-        private List<ExpressoVariable<T>> variables = new List<ExpressoVariable<T>>();
+        private List<ExpressoVariable<T>> _variables = new List<ExpressoVariable<T>>();
 
         private bool _isDynamic;
         private Dictionary<string, Func<bool>> _commands;
@@ -23,6 +23,7 @@ namespace Calculator
             {
                 { "help", Help },
                 { "show", ShowVariables },
+                { "clear", Clear },
                 { "exit", Exit },
                 { "quit", Exit },
             };
@@ -36,7 +37,7 @@ namespace Calculator
 
         private bool ShowVariables()
         {
-            foreach (var variable in variables)
+            foreach (var variable in _variables)
             {
                 Console.WriteLine($"{variable.Name, -20}{variable.Value.GetType(), -20}= {variable.Value}");
             }
@@ -51,6 +52,12 @@ namespace Calculator
             Console.WriteLine("    show      : Show a list of current variables");
             Console.WriteLine("    exit/quit : Exit the program");
 
+            return true;
+        }
+
+        private bool Clear()
+        {
+            _variables.Clear();
             return true;
         }
 
@@ -89,15 +96,22 @@ namespace Calculator
                 var expression = line;
                 if (match.Success)
                 {
-                    assignTo = match.Groups[1].ToString();
-                    expression = match.Groups[2].ToString();
+                    assignTo = match.Groups[1].ToString().Trim();
+                    expression = match.Groups[2].ToString().Trim();
+
+                    /* Delete this variable */
+                    if (expression.Length == 0)
+                    {
+                        _variables.RemoveAll(x => x.Name == assignTo);
+                        continue;
+                    }
                 }
 
                 Func<T> func;
                 try
                 {
                     /* Compile the expression */
-                    func = ExpressoCompiler.CompileExpression<Func<T>>(expression, variables.ToArray(), true);
+                    func = ExpressoCompiler.CompileExpression<Func<T>>(expression, _variables.ToArray(), true);
                 }
                 catch (ParserException e)
                 {
@@ -130,7 +144,7 @@ namespace Calculator
                 /* If it was an assignment, find the variable and store the result */
                 if (assignTo != null)
                 {
-                    var variable = variables.FirstOrDefault(x => x.Name == assignTo);
+                    var variable = _variables.FirstOrDefault(x => x.Name == assignTo);
                     /* If the variable already exists; assign the result. */
                     if (variable != null)
                     {
@@ -139,7 +153,7 @@ namespace Calculator
                     /* If the variable doesn't already exist, add it with the result as it's initial value. */
                     else
                     {
-                        variables.Add(ExpressoVariable.Create<T>(_isDynamic, assignTo, result));
+                        _variables.Add(ExpressoVariable.Create<T>(_isDynamic, assignTo, result));
                     }
                 }
 
