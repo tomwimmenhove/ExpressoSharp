@@ -11,25 +11,45 @@ namespace Expresso
     {
         public string Name { get; }
         public Type Type { get; }
+        public bool IsDynamic { get; }
 
         internal PropertyDeclarationSyntax SyntaxNode { get; }
         internal abstract void Init(PropertyInfo property);
 
         public static ExpressoVariable<T> Create<T>(string name) =>
-            new ExpressoVariable<T>(name, null);
+            new ExpressoVariable<T>(name, null, false);
 
         public static ExpressoVariable<T> Create<T>(string name, T initialValue) =>
-            new ExpressoVariable<T>(name, initialValue, true);
+            new ExpressoVariable<T>(name, initialValue, false, true);
 
         public static ExpressoVariable<T> CreateWithInitializer<T>(string name, string initializer) =>
-            new ExpressoVariable<T>(name, initializer);
+            new ExpressoVariable<T>(name, initializer, false);
 
-        internal ExpressoVariable(string name, string initialValue, Type type)
+        public static ExpressoVariable<T> Create<T>(bool isDynamic, string name) =>
+            new ExpressoVariable<T>(name, null, isDynamic);
+
+        public static ExpressoVariable<T> Create<T>(bool isDynamic, string name, T initialValue) =>
+            new ExpressoVariable<T>(name, initialValue, isDynamic, true);
+
+        public static ExpressoVariable<T> CreateWithInitializer<T>(bool isDynamic, string name, string initializer) =>
+            new ExpressoVariable<T>(name, initializer, isDynamic);
+
+        internal ExpressoVariable(string name, string initialValue, Type type, bool isDynamic)
         {
+            if (isDynamic && type != typeof(object))
+            {
+                throw new ArgumentException($"The {nameof(type)} parameter must be {typeof(object)} when {nameof(isDynamic)} is set to true");
+            }
+
             Name = name;
             Type = type;
+            IsDynamic = isDynamic;
 
-            SyntaxNode = SyntaxFactory.PropertyDeclaration(SyntaxFactory.ParseTypeName(Type.FullName), Name)
+            var typeSyntax = isDynamic
+                ? SyntaxFactory.ParseTypeName("dynamic")
+                : SyntaxFactory.ParseTypeName(type.FullName);
+
+            SyntaxNode = SyntaxFactory.PropertyDeclaration(typeSyntax, Name)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddAccessorListAccessors(
                     SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
@@ -67,12 +87,12 @@ namespace Expresso
         private T _initialValue;
         private bool _isInitialized;
 
-        internal ExpressoVariable(string name, string initializer)
-            : base(name, initializer, typeof(T))
+        internal ExpressoVariable(string name, string initializer, bool isDynamic)
+            : base(name, initializer, typeof(T), isDynamic)
         { }
 
-        internal ExpressoVariable(string name, T initialValue, bool initialized)
-            : base(name, null, typeof(T))
+        internal ExpressoVariable(string name, T initialValue, bool isDynamic, bool initialized)
+            : base(name, null, typeof(T), isDynamic)
         {
             _initialValue = initialValue;
 

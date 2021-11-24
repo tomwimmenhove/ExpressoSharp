@@ -12,14 +12,20 @@ namespace Expresso
         public string Expression { get; }
         public ExpressoParameter[] Parameters { get; }
         public Type ReturnType { get; }
+        public bool ReturnsDynamic { get; }
 
         internal Type DelegateType { get; }
         internal MethodDeclarationSyntax SyntaxNode { get; }
 
         public static ExpressoMethod Create<T>(string expression, params string[] parameterNames) where T : Delegate =>
-             CreateNamedMethod<T>($"_{Guid.NewGuid().ToString("N")}", expression, parameterNames);
+             CreateNamedMethod<T>($"_{Guid.NewGuid().ToString("N")}", expression, false, parameterNames);
 
-        internal static ExpressoMethod CreateNamedMethod<T>(string name, string expression, params string[] parameterNames) where T : Delegate
+        public static ExpressoMethod Create<T>(string expression, bool objectsAsDynamic,
+            params string[] parameterNames) where T : Delegate =>
+            CreateNamedMethod<T>($"_{Guid.NewGuid().ToString("N")}", expression, objectsAsDynamic, parameterNames);
+
+        internal static ExpressoMethod CreateNamedMethod<T>(string name, string expression, bool objectsAsDynamic,
+            params string[] parameterNames) where T : Delegate
         {
             var invokeMethod = typeof(T).GetMethod("Invoke");
             var parameters = invokeMethod.GetParameters();
@@ -31,20 +37,31 @@ namespace Expresso
             var expressoParameters = new ExpressoParameter[parameters.Count()];
             for (var i = 0; i < parameters.Count(); i++)
             {
-                expressoParameters[i] = new ExpressoParameter(parameterNames[i], parameters[i].ParameterType);
+                var parameterType = parameters[i].ParameterType;
+
+                expressoParameters[i] = new ExpressoParameter(parameterNames[i], parameterType,
+                    objectsAsDynamic && parameterType == typeof(object));
             }
 
-            return new ExpressoMethod(typeof(T), name, invokeMethod.ReturnType, expression, expressoParameters);
+            return new ExpressoMethod(typeof(T), name, invokeMethod.ReturnType,
+                objectsAsDynamic && invokeMethod.ReturnType == typeof(object),
+                expression, expressoParameters);
         }
 
-        private ExpressoMethod(Type delegateType, string name, Type returnType, string expression,
-            params ExpressoParameter[] parameters)
+        private ExpressoMethod(Type delegateType, string name, Type returnType, bool returnsDynamic,
+            string expression, params ExpressoParameter[] parameters)
         {
+            if (returnsDynamic && returnType != typeof(object))
+            {
+                throw new ArgumentException($"The {nameof(returnType)} parameter must be {typeof(object)} when {nameof(returnsDynamic)} is set to true");
+            }
+
             DelegateType = delegateType;
             Name = name;
             ReturnType = returnType;
             Expression = expression;
             Parameters = parameters;
+            ReturnsDynamic = returnsDynamic;
 
             var parsedExpression = SyntaxFactory.ParseExpression(Expression);
             var errors = parsedExpression.GetDiagnostics()
@@ -58,19 +75,21 @@ namespace Expresso
             if (returnType == typeof(void))
             {
                 SyntaxNode = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(
-                    SyntaxFactory.Token(SyntaxKind.VoidKeyword)), Name)
-                    .AddModifiers(
+                    SyntaxFactory.Token(SyntaxKind.VoidKeyword)), Name).AddModifiers(
                         SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
-                            Parameters.Select(x => x.ToParameterSyntax()).ToArray())
+                            Parameters.Select(x => x.SyntaxNode).ToArray())
                         .WithBody(SyntaxFactory.Block(SyntaxFactory.ExpressionStatement(parsedExpression)));
             }
             else
             {
-                SyntaxNode = SyntaxFactory.MethodDeclaration(SyntaxFactory.ParseTypeName(ReturnType.FullName), Name)
-                    .AddModifiers(
-                        SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
-                            Parameters.Select(x => x.ToParameterSyntax()).ToArray())
-                        .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(parsedExpression)));
+                var typeSyntax = returnsDynamic
+                    ? SyntaxFactory.ParseTypeName("dynamic")
+                    : SyntaxFactory.ParseTypeName(returnType.FullName);
+
+                SyntaxNode = SyntaxFactory.MethodDeclaration(typeSyntax, Name).AddModifiers(
+                    SyntaxFactory.Token(SyntaxKind.PublicKeyword)).AddParameterListParameters(
+                        Parameters.Select(x => x.SyntaxNode).ToArray())
+                    .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(parsedExpression)));
             }
         }
     }

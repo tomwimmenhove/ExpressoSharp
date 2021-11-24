@@ -15,7 +15,7 @@ namespace Calculator
             /* Use doubles by default */
             if (args.Length == 0)
             {
-                var calc = new Calc<double>();
+                var calc = new Calc<double>(false);
                 calc.Run();
 
                 return;
@@ -27,7 +27,7 @@ namespace Calculator
             /* Special case for dynamic type */
             if (valuetypeName == "dynamic")
             {
-                var calc = new Calc<dynamic>();
+                var calc = new Calc<dynamic>(true);
                 calc.Run();
             }
 
@@ -42,7 +42,7 @@ namespace Calculator
 
             var calcType = typeof(Calc<>).MakeGenericType(valueType);
             var instance = Activator.CreateInstance(calcType);
-            instance.GetType().GetMethod(nameof(Calc<object>.Run)).Invoke(instance, null);
+            instance.GetType().GetMethod(nameof(Calc<object>.Run)).Invoke(instance, new object[] { false });
         }
     }
 }

@@ -12,9 +12,13 @@ namespace Expresso
     public class ExpressoCompiler
     {
         public static T CompileExpression<T>(string expression,
-            ICollection<ExpressoVariable> variables, params string[] parameterNames) where T : Delegate
+            ICollection<ExpressoVariable> variables, params string[] parameterNames) where T : Delegate =>
+            CompileExpression<T>(expression, variables, false, parameterNames);
+
+        public static T CompileExpression<T>(string expression,
+            ICollection<ExpressoVariable> variables, bool objectsAsDynamic, params string[] parameterNames) where T : Delegate
         {
-            var method = ExpressoMethod.CreateNamedMethod<T>("SingleMethod", expression, parameterNames);
+            var method = ExpressoMethod.CreateNamedMethod<T>("SingleMethod", expression, objectsAsDynamic, parameterNames);
             var assembly = Compile("SingleNameSpace", "SingleClass", variables, method);
             var assemblyType = assembly.GetType("SingleNameSpace.SingleClass");
 
@@ -23,9 +27,13 @@ namespace Expresso
             return (T) DelegateFromMethod(assemblyType, method);
         }
 
+        public static T CompileExpression<T>(string expression, bool objectsAsDynamic,
+            params string[] parameterNames) where T : Delegate =>
+            CompileExpression<T>(expression, new ExpressoVariable[0], objectsAsDynamic, parameterNames);            
+
         public static T CompileExpression<T>(string expression,
             params string[] parameterNames) where T : Delegate =>
-            CompileExpression<T>(expression, new ExpressoVariable[0], parameterNames);            
+            CompileExpression<T>(expression, new ExpressoVariable[0], false, parameterNames);            
 
         public static Delegate[] CompileExpressions(ICollection<ExpressoVariable> variables, params ExpressoMethod[] methods)
         {
@@ -66,10 +74,19 @@ namespace Expresso
                 .Concat(methods.Select(x => x.ReturnType))
                 .Concat(variables.Select(x => x.Type))
                 .Append(typeof(object))
-                .Select(x => x.Assembly.Location));
+                .Select(x => x.Assembly.Location))
+                .ToList();
 
-            var compilationUnit = CreateCompilationUnitSyntax(
-                namespaceName, className, variables, methods);
+            /* Add additional assemblies in case the dynamic type is used */
+            if (methods.Any(x => x.ReturnsDynamic || x.Parameters.Any(y => y.IsDynamic)) ||
+                variables.Any(x => x.IsDynamic))
+            {
+                usedAssemblies.Add(typeof(System.Runtime.CompilerServices.DynamicAttribute).Assembly.Location);
+                usedAssemblies.Add(typeof(Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfo).Assembly.Location);
+                usedAssemblies.Add(Assembly.Load(new AssemblyName("System.Runtime")).Location);
+            }
+
+            var compilationUnit = CreateCompilationUnitSyntax(namespaceName, className, variables, methods);
 
             //System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
 

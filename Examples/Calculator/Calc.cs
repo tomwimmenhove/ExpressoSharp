@@ -3,7 +3,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Expresso;
-using System.Runtime.CompilerServices;
 
 namespace Calculator
 {
@@ -15,9 +14,10 @@ namespace Calculator
         /* A list of variables used */
         private List<ExpressoVariable<T>> variables = new List<ExpressoVariable<T>>();
 
+        private bool _isDynamic;
         private Dictionary<string, Func<bool>> _commands;
 
-        public Calc()
+        public Calc(bool isDynamic)
         {
             _commands = new Dictionary<string, Func<bool>>(StringComparer.OrdinalIgnoreCase)
             {
@@ -26,6 +26,8 @@ namespace Calculator
                 { "exit", Exit },
                 { "quit", Exit },
             };
+
+            _isDynamic = isDynamic;
 
             Console.Write("Initializing...");
             ExpressoCompiler.Prime();
@@ -36,7 +38,7 @@ namespace Calculator
         {
             foreach (var variable in variables)
             {
-                Console.WriteLine($"{variable.Name} = {variable.Value}");
+                Console.WriteLine($"{variable.Name, -20}{variable.Value.GetType(), -20}= {variable.Value}");
             }
 
             return true;
@@ -91,14 +93,11 @@ namespace Calculator
                     expression = match.Groups[2].ToString();
                 }
 
-                T result;
+                Func<T> func;
                 try
                 {
                     /* Compile the expression */
-                    var f = ExpressoCompiler.CompileExpression<Func<T>>(expression, variables.ToArray());
-
-                    /* Run the compiled function and get the result */
-                    result = f();
+                    func = ExpressoCompiler.CompileExpression<Func<T>>(expression, variables.ToArray(), true);
                 }
                 catch (ParserException e)
                 {
@@ -116,6 +115,18 @@ namespace Calculator
                     continue;
                 }
 
+                T result;
+                try
+                {
+                    /* Run the compiled function and get the result */
+                    result = func();
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine($"Runtime exception: {e.Message}");
+                    continue;
+                }
+
                 /* If it was an assignment, find the variable and store the result */
                 if (assignTo != null)
                 {
@@ -128,7 +139,7 @@ namespace Calculator
                     /* If the variable doesn't already exist, add it with the result as it's initial value. */
                     else
                     {
-                        variables.Add(ExpressoVariable.Create<T>(assignTo, result));
+                        variables.Add(ExpressoVariable.Create<T>(_isDynamic, assignTo, result));
                     }
                 }
 
