@@ -61,18 +61,19 @@ namespace Expresso
         private static Assembly Compile(string namespaceName, string className,
             ICollection<ExpressoVariable> variables, params ExpressoMethod[] methods)
         {
-            var allTypes = new HashSet<Type>(methods
+            var usedAssemblies = new HashSet<string>(methods
                 .SelectMany(x => x.Parameters.Select(y => y.Type))
                 .Concat(methods.Select(x => x.ReturnType))
                 .Concat(variables.Select(x => x.Type))
-                .Append(typeof(object)));
+                .Append(typeof(object))
+                .Select(x => x.Assembly.Location));
 
             var compilationUnit = CreateCompilationUnitSyntax(
                 namespaceName, className, variables, methods);
 
             //System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
 
-            return Compile(compilationUnit.SyntaxTree, allTypes);
+            return Compile(compilationUnit.SyntaxTree, usedAssemblies);
         }
 
         private static CompilationUnitSyntax CreateCompilationUnitSyntax(string nameSpaceName, string className,
@@ -86,9 +87,9 @@ namespace Expresso
                             .Concat(methods.Select(x => (MemberDeclarationSyntax)x.SyntaxNode)).ToArray()
                     )));
 
-        private static Assembly Compile(SyntaxTree syntaxTree, IEnumerable<Type> usedTypes)
+        private static Assembly Compile(SyntaxTree syntaxTree, IEnumerable<string> usedAssemblies)
         {
-            var references = usedTypes.Select(x => MetadataReference.CreateFromFile(x.Assembly.Location));
+            var references = usedAssemblies.Select(x => MetadataReference.CreateFromFile(x));
 
             var compilation = CSharpCompilation.Create(
                 "InMemoryAssembly",
