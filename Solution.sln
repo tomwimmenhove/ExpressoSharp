@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Calculator2", "Examples\Cal
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Calculator1", "Examples\Calculator1\Calculator1.csproj", "{B4C9D93F-18CB-4A57-AB36-523935761080}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,6 +76,18 @@ Global
 		{B4C9D93F-18CB-4A57-AB36-523935761080}.Release|x64.Build.0 = Release|Any CPU
 		{B4C9D93F-18CB-4A57-AB36-523935761080}.Release|x86.ActiveCfg = Release|Any CPU
 		{B4C9D93F-18CB-4A57-AB36-523935761080}.Release|x86.Build.0 = Release|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Debug|x64.Build.0 = Debug|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Debug|x86.Build.0 = Debug|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Release|x64.ActiveCfg = Release|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Release|x64.Build.0 = Release|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Release|x86.ActiveCfg = Release|Any CPU
+		{FE920562-CB13-4DE7-8CA5-D92F9A4FE316}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{EB64C976-6ADC-476E-8CF2-22E0F12B71C1} = {17E56379-399E-490A-A658-97DFF7975149}
