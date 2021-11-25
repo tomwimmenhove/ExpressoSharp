@@ -83,7 +83,19 @@ namespace Expresso
             {
                 usedAssemblies.Add(typeof(System.Runtime.CompilerServices.DynamicAttribute).Assembly.Location);
                 usedAssemblies.Add(typeof(Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfo).Assembly.Location);
-                usedAssemblies.Add(Assembly.Load(new AssemblyName("System.Runtime")).Location);
+
+                /* When compiling in .NET5, using the dynamic type will throw a
+                 * "Missing compiler required member 'Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfo.Create'"
+                 * error, unless the "System.Runtime" assembly is manually referenced.
+                 * This is a work-around for that issues. */
+                try
+                {
+                    usedAssemblies.Add(Assembly.Load(new AssemblyName("System.Runtime")).Location);
+                }
+                catch(FileNotFoundException)
+                {
+                    /* Whatever... */
+                }
             }
 
             var compilationUnit = CreateCompilationUnitSyntax(namespaceName, className, variables, methods);
@@ -101,9 +113,7 @@ namespace Expresso
                 .AddMembers(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(nameSpaceName)).AddMembers(
                     SyntaxFactory.ClassDeclaration(className).AddMembers(
                         variables.Select(x => (MemberDeclarationSyntax)x.PropertySyntaxNode)
-
                             .Concat(variables.Select(x => (MemberDeclarationSyntax)x.FieldSyntaxNode))
-
                             .Concat(methods.Select(x => (MemberDeclarationSyntax)x.SyntaxNode)).ToArray()
                     )));
 
