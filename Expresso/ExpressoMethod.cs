@@ -27,6 +27,7 @@ namespace Expresso
         internal static ExpressoMethod CreateNamedMethod<T>(string name, string expression, bool objectsAsDynamic,
             params string[] parameterNames) where T : Delegate
         {
+            /* Use reflection to determine how T (which is a delegate) is to be invoked */
             var invokeMethod = typeof(T).GetMethod("Invoke");
             var parameters = invokeMethod.GetParameters();
             if (parameters.Count() != parameterNames.Count())
@@ -34,6 +35,7 @@ namespace Expresso
                 throw new ArgumentException($"Number of parameter names ({parameters.Count()}) does not match the numbers of parameters of the delegate type ({parameterNames.Count()})");
             }
 
+            /* Use this information to create the ExpressoParameter list with the correct types */
             var expressoParameters = new ExpressoParameter[parameters.Count()];
             for (var i = 0; i < parameters.Count(); i++)
             {
@@ -63,15 +65,17 @@ namespace Expresso
             Parameters = parameters;
             ReturnsDynamic = returnsDynamic;
 
+            /* Parse the expression that is to be compiled */
             var parsedExpression = SyntaxFactory.ParseExpression(Expression);
             var errors = parsedExpression.GetDiagnostics()
                 .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
-
             if (errors.Any())
             {
                 throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
             }
 
+            /* The return type of our method (void or not void)
+             * changes the way the SyntaxNode is constructed */
             if (returnType == typeof(void))
             {
                 SyntaxNode = SyntaxFactory.MethodDeclaration(SyntaxFactory.PredefinedType(

@@ -48,10 +48,13 @@ namespace Expresso
         public static Delegate[] CompileExpressions(params ExpressoMethod[] methods) =>
             CompileExpressions(new ExpressoVariable[0], methods);
 
+        /* Compile a dummy program to force all needed assemblies to be loaded */
         public static void Prime() => CompileExpression<Func<object>>("null");
 
         private static Delegate DelegateFromMethod(Type type, ExpressoMethod method)
         {
+            /* Find a method with the correct name and parameter signature in the
+             * given type and convert the returned MethodInfo to a delegate */
             var parameterTypes = method.Parameters.Select(x => x.Type).ToArray();
             var methodInfo = type.GetMethod(method.Name, parameterTypes);
 
@@ -69,6 +72,8 @@ namespace Expresso
         private static Assembly Compile(string namespaceName, string className,
             ICollection<ExpressoVariable> variables, params ExpressoMethod[] methods)
         {
+            /* Create a unique list of all assemblies needed for
+             * any return, parameter and variable type used */
             var usedAssemblies = new HashSet<string>(methods
                 .SelectMany(x => x.Parameters.Select(y => y.Type))
                 .Concat(methods.Select(x => x.ReturnType))

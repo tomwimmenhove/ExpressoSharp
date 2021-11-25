@@ -15,7 +15,8 @@ namespace Expresso
         protected string PropertyName { get; }
 
         internal PropertyDeclarationSyntax PropertySyntaxNode { get; }
-        internal FieldDeclarationSyntax FieldSyntaxNode;
+        internal FieldDeclarationSyntax FieldSyntaxNode { get; }
+
         internal abstract void Init(Type type);
 
         public static ExpressoVariable<T> Create<T>(string name) =>
@@ -46,16 +47,19 @@ namespace Expresso
             Name = name;
             Type = type;
             IsDynamic = isDynamic;
-            PropertyName = $"Getter_{Guid.NewGuid().ToString("N")}";
 
-            var variableDeclaration = SyntaxFactory.VariableDeclarator(Name);
+            /* A unique name for the getter */
+            PropertyName = $"Get_{name}_{Guid.NewGuid().ToString("N")}";
 
+            var variableDeclaration = SyntaxFactory.VariableDeclarator(name);
+
+            /* If an initial value expression is set, try to parse
+             * it and add the initializer to the variableDeclaration */
             if (initialValue != null)
             {
                 var initialExpression = SyntaxFactory.ParseExpression(initialValue);
                 var errors = initialExpression.GetDiagnostics()
                     .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
-
                 if (errors.Any())
                 {
                     throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
@@ -65,24 +69,30 @@ namespace Expresso
                     SyntaxFactory.EqualsValueClause(initialExpression));
             }
 
+            /* Since the dynamic type is not a real type, it has to be set explicitely */
             var typeSyntax = isDynamic
                 ? SyntaxFactory.ParseTypeName("dynamic")
                 : SyntaxFactory.ParseTypeName(type.FullName);
 
+            /* This is the field that the compiled expression will be able to use */
             FieldSyntaxNode = SyntaxFactory.FieldDeclaration(SyntaxFactory.VariableDeclaration(typeSyntax)
                 .AddVariables(variableDeclaration))
-                .AddModifiers( SyntaxFactory.Token( SyntaxKind.PrivateKeyword ), SyntaxFactory.Token(SyntaxKind.StaticKeyword) );
+                .AddModifiers( SyntaxFactory.Token( SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
+            /* This is the property that we will 'attach' to when getting/setting the
+             * value of this variable using ExpressoVariable<T>.Value */
             PropertySyntaxNode = SyntaxFactory.PropertyDeclaration(typeSyntax, SyntaxFactory.Identifier(PropertyName))
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword),
                     SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddAccessorListAccessors( 
+                    /* Add a getter */
                     SyntaxFactory.AccessorDeclaration(
                         SyntaxKind.GetAccessorDeclaration,
                         SyntaxFactory.Block(
                             SyntaxFactory.ReturnStatement(SyntaxFactory.IdentifierName(Name))
                         )
                     ),
+                    /* And a setter */
                     SyntaxFactory.AccessorDeclaration(
                         SyntaxKind.SetAccessorDeclaration,
                         SyntaxFactory.Block( 
@@ -129,8 +139,9 @@ namespace Expresso
 
         internal override void Init(Type type)
         {
+            /* The the getter and setter from the type in the compiled assembly and
+             * attach it to the _getter and _setter members used by the Value property */
             var property = type.GetProperty(PropertyName);
-
             var getter = (Func<T>) Delegate.CreateDelegate(typeof(Func<T>), property.GetGetMethod());
             var setter = (Action<T>) Delegate.CreateDelegate(typeof(Action<T>), property.GetSetMethod());
 
