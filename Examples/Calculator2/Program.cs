@@ -35,6 +35,8 @@ namespace Calculator
             {
                 var calc = new Calc<dynamic>(true);
                 calc.Run();
+                
+                return;
             }
 
             var valueType = Type.GetType(valuetypeName);
