@@ -6,7 +6,7 @@
 
 using System;
 
-namespace Expresso
+namespace ExpressoSharp
 {
     public class ExpressoException : Exception
     {
