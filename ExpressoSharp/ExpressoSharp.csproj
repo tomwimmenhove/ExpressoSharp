@@ -5,11 +5,11 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>ExpressoSharp</PackageId>
     <Title>ExpressoSharp</Title>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>Tom Wimmenhove</Authors>
     <Company />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>ExpressoSharp is a .NET for compiling C#-syntax expressions into a callable function. This allows applications to use compile mathematical user-input into functions and run them at native speed. This generally requires just one single line of code. Adding global variables and using dynamic types are also supported.
+    <Description>ExpressoSharp is a .NET library for compiling C#-syntax expressions into callable functions. This allows applications to compile mathematical expression from user-input into functions and run them at native speed. This generally requires just a single line of code. Adding global variables and using dynamic types are also supported.
     </Description>
     <Copyright>Copyright 2021</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
