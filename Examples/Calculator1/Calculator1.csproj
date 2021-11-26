@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Expresso\Expresso.csproj" />
+    <ProjectReference Include="..\..\ExpressoSharp\ExpressoSharp.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

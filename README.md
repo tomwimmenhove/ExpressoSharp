@@ -1,4 +1,4 @@
-# Expresso
+# ExpressoSharp
 Easy to use compiler to evaluate string expressions for .NET
 
 Easily compile an expression, like "x * 2", into a Func<..> type like so:

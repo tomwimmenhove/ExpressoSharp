@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Expresso\Expresso.csproj" />
+    <ProjectReference Include="..\ExpressoSharp\ExpressoSharp.csproj" />
   </ItemGroup>
 
 </Project>
