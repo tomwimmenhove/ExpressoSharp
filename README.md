@@ -10,3 +10,5 @@ And then be able to use the result as a simple function, like so:
 ```csharp
 var fortyTwo = calc(21);
 ```
+
+You can find the package on Nuget using this link: https://www.nuget.org/packages/ExpressoSharp/
