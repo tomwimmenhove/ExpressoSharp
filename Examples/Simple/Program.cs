@@ -47,6 +47,9 @@ namespace Simple
             {
                 Console.Error.WriteLine($"Compile error: {e.Message}");
             }
+
+            Console.WriteLine("Press any key to return");
+            Console.ReadKey();
         }
     }
 }
