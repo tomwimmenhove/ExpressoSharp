@@ -12,10 +12,11 @@ namespace ExpressoSharp
 
         public T Value { get; set; }
 
-        MemberDeclarationSyntax[] IExpressoVariable.SyntaxNodes { get; set; }
+        MemberDeclarationSyntax[] IExpressoVariable.SyntaxNodes => _syntaxNodes;
 
         private string _getterName { get; }
         private string _setterName { get; }
+        private MemberDeclarationSyntax[] _syntaxNodes;
 
         public ExpressoProperty(string name, T value = default)
             : this(false, name, value)
@@ -85,7 +86,7 @@ namespace ExpressoSharp
                     .AddVariables(SyntaxFactory.VariableDeclarator(_setterName)))
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
-            ((IExpressoVariable) this).SyntaxNodes = new MemberDeclarationSyntax[]
+            _syntaxNodes = new MemberDeclarationSyntax[]
                 { getterSyntaxNode, setterSyntaxNode, propertySyntaxNode, };
         }
 

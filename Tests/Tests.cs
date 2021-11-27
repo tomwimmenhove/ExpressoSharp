@@ -143,8 +143,8 @@ namespace Tests
         {
             var v = new ExpressoField<string>("s", "\"test\"");
 
-            var method1 = ExpressoMethod.Create<Func<string>>("s");
-            var method2 = ExpressoMethod.Create<Action<string>>("s = x", "x");
+            var method1 = new ExpressoMethod<Func<string>>("s");
+            var method2 = new ExpressoMethod<Action<string>>("s = x", "x");
 
             var funcs = ExpressoCompiler.CompileExpressions(new[] { v }, method1, method2);
             
@@ -163,8 +163,8 @@ namespace Tests
         {
             var v = new ExpressoField<dynamic>(true, "s", "\"1234\"");
 
-            var method1 = ExpressoMethod.Create<Func<dynamic>>("s.Length", true);
-            var method2 = ExpressoMethod.Create<Action<dynamic>>("s = x", "x");
+            var method1 = new ExpressoMethod<Func<dynamic>>("s.Length", true);
+            var method2 = new ExpressoMethod<Action<dynamic>>("s = x", "x");
 
             var funcs = ExpressoCompiler.CompileExpressions(new[] { v }, method1, method2);
             

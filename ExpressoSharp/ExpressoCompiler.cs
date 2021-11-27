@@ -24,7 +24,7 @@ namespace ExpressoSharp
         public static T CompileExpression<T>(string expression,
             ICollection<IExpressoVariable> variables, bool objectsAsDynamic, params string[] parameterNames) where T : Delegate
         {
-            var method = ExpressoMethod.CreateNamedMethod<T>("SingleMethod", expression, objectsAsDynamic, parameterNames);
+            var method = new ExpressoMethod<T>(expression, objectsAsDynamic, parameterNames);
             var assembly = Compile("SingleNameSpace", "SingleClass", variables, method);
             var assemblyType = assembly.GetType("SingleNameSpace.SingleClass");
 
@@ -41,7 +41,7 @@ namespace ExpressoSharp
             params string[] parameterNames) where T : Delegate =>
             CompileExpression<T>(expression, new IExpressoVariable[0], false, parameterNames);            
 
-        public static Delegate[] CompileExpressions(ICollection<IExpressoVariable> variables, params ExpressoMethod[] methods)
+        public static Delegate[] CompileExpressions(ICollection<IExpressoVariable> variables, params IExpressoMethod[] methods)
         {
             var assembly = Compile("SingleNameSpace", "SingleClass", variables, methods);
             var assemblyType = assembly.GetType("SingleNameSpace.SingleClass");
@@ -51,13 +51,13 @@ namespace ExpressoSharp
             return methods.Select(x => DelegateFromMethod(assemblyType, x)).ToArray();
         }
 
-        public static Delegate[] CompileExpressions(params ExpressoMethod[] methods) =>
+        public static Delegate[] CompileExpressions(params IExpressoMethod[] methods) =>
             CompileExpressions(new IExpressoVariable[0], methods);
 
         /* Compile a dummy program to force all needed assemblies to be loaded */
         public static void Prime() => CompileExpression<Func<object>>("null");
 
-        private static Delegate DelegateFromMethod(Type type, ExpressoMethod method)
+        private static Delegate DelegateFromMethod(Type type, IExpressoMethod method)
         {
             /* Find a method with the correct name and parameter signature in the
              * given type and convert the returned MethodInfo to a delegate */
@@ -76,7 +76,7 @@ namespace ExpressoSharp
         }
 
         private static Assembly Compile(string namespaceName, string className,
-            ICollection<IExpressoVariable> variables, params ExpressoMethod[] methods)
+            ICollection<IExpressoVariable> variables, params IExpressoMethod[] methods)
         {
             /* Create a unique list of all assemblies needed for
              * any return, parameter and variable type used */
@@ -117,7 +117,7 @@ namespace ExpressoSharp
         }
 
         private static CompilationUnitSyntax CreateCompilationUnitSyntax(string nameSpaceName, string className,
-            ICollection<IExpressoVariable> variables, ExpressoMethod[] methods) =>
+            ICollection<IExpressoVariable> variables, IExpressoMethod[] methods) =>
             SyntaxFactory.CompilationUnit().AddUsings(
                 SyntaxFactory.UsingDirective(SyntaxFactory.Token(SyntaxKind.StaticKeyword),
                     null, SyntaxFactory.ParseName("System.Math")))

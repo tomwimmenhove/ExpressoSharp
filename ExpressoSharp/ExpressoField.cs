@@ -12,10 +12,11 @@ namespace ExpressoSharp
         public Type Type { get; }
         public bool IsDynamic { get; }
 
-        MemberDeclarationSyntax[] IExpressoVariable.SyntaxNodes { get; set; }
+        MemberDeclarationSyntax[] IExpressoVariable.SyntaxNodes => _syntaxNodes;
 
         private string _getterName { get; }
         private string _setterName { get; }
+        private MemberDeclarationSyntax[] _syntaxNodes;
 
         public ExpressoField(string name, string initializer = null)
             : this(false, name, initializer)
@@ -61,7 +62,7 @@ namespace ExpressoSharp
                 .AddVariables(variableDeclaration))
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
-            ((IExpressoVariable) this).SyntaxNodes = new MemberDeclarationSyntax[] { fieldSyntaxNode };
+            _syntaxNodes = new MemberDeclarationSyntax[] { fieldSyntaxNode };
         }
 
         void IExpressoVariable.PostCompilation(Type type) { }

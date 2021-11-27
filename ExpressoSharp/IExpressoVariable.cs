@@ -15,7 +15,7 @@ namespace ExpressoSharp
         Type Type { get; }
         bool IsDynamic { get; }
 
-        MemberDeclarationSyntax[] SyntaxNodes { get; set; }
+        MemberDeclarationSyntax[] SyntaxNodes { get; }
 
         void PostCompilation(Type type);
     }

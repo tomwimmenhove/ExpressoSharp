@@ -28,8 +28,8 @@ namespace Simple
 
                 /* We can also compile multiple expressions simultaniously. This will result in an array of delegates. */
                 var multi = ExpressoCompiler.CompileExpressions(                    
-                    ExpressoMethod.Create<Func<double, double>>("x * 21", "x"),
-                    ExpressoMethod.Create<Func<NonNativeTypeTest, double>>("x.X * 21", "x")
+                    new ExpressoMethod<Func<double, double>>("x * 21", "x"),
+                    new ExpressoMethod<Func<NonNativeTypeTest, double>>("x.X * 21", "x")
                 );
 
                 /* We can simply cast the delecations to Func<,> types and then cann them as if they're normal functions. */
