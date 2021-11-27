@@ -65,18 +65,7 @@ namespace Tests
         [TestMethod]
         public void VariableTest()
         {
-            var v1 = ExpressoVariable.Create<string>("s");
-
-            try
-            {
-                /* Should throw because it's not initiallized */
-                v1.Value = "hello";
-                Assert.Fail();
-            }
-            catch (NotSupportedException)
-            {
-            }
-
+            var v1 = new ExpressoVariable<string>("s");
             var fn1 = ExpressoCompiler.CompileExpression<Func<string, string>>("s = a", new[] { v1 }, "a");
             var s = fn1("Hello world");
             Assert.AreEqual(s, "Hello world");
@@ -90,7 +79,7 @@ namespace Tests
             var fn3 = ExpressoCompiler.CompileExpression<Func<bool>>("s == \"Bye\"", new[] { v1 });
             Assert.IsTrue(fn3());
 
-            var v2 = ExpressoVariable.Create<string>("s", "test");
+            var v2 = new ExpressoVariable<string>("s", "test");
             Assert.AreEqual(v2.Value, "test");
 
             var fn4 = ExpressoCompiler.CompileExpression<Func<string>>("s", new[] { v2 });
@@ -100,11 +89,11 @@ namespace Tests
         [TestMethod]
         public void DynamicTest()
         {
-            var v1 = ExpressoVariable.Create<dynamic>(true, "s", "test");
+            var v1 = new ExpressoVariable<dynamic>(true, "s", "test");
             var fn1 = ExpressoCompiler.CompileExpression<Func<bool>>("s.Length == 4", new[] { v1 });
             Assert.IsTrue(fn1());
 
-            var v2 = ExpressoVariable.Create<dynamic>(false, "s", "test");
+            var v2 = new ExpressoVariable<dynamic>(false, "s", "test");
             try
             {
                 ExpressoCompiler.CompileExpression<Func<int>>("s.Length", new[] { v2 });
@@ -117,7 +106,7 @@ namespace Tests
             var fn3 = ExpressoCompiler.CompileExpression<Func<dynamic>>("\"test\"");
             Assert.AreEqual(fn3().Length, 4);
 
-            var v3 = ExpressoVariable.Create<dynamic>(true, "s", 42);
+            var v3 = new ExpressoVariable<dynamic>(true, "s", 42);
 
             var fn4 = ExpressoCompiler.CompileExpression<Func<Type>>("s.GetType()", new[] { v3 });
             Assert.AreEqual(fn4(), typeof(int));
