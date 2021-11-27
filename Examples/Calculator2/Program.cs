@@ -8,9 +8,6 @@ using System;
 
 namespace Calculator
 {
-    class TestClass{
-        public int Bla {get; set;}
-    }
     class Program
     {
         static void Main(string[] args)
