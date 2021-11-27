@@ -6,8 +6,14 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ExpressoSharp
 {
-    public class ExpressoField<T> : ExpressoVariable
+    public class ExpressoField<T> : IExpressoVariable
     {
+        public string Name { get; }
+        public Type Type { get; }
+        public bool IsDynamic { get; }
+
+        MemberDeclarationSyntax[] IExpressoVariable.SyntaxNodes { get; set; }
+
         private string _getterName { get; }
         private string _setterName { get; }
 
@@ -55,9 +61,9 @@ namespace ExpressoSharp
                 .AddVariables(variableDeclaration))
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
-            SyntaxNodes = new MemberDeclarationSyntax[] { fieldSyntaxNode };
+            ((IExpressoVariable) this).SyntaxNodes = new MemberDeclarationSyntax[] { fieldSyntaxNode };
         }
 
-        internal override void Init(Type type) { }
+        void IExpressoVariable.Init(Type type) { }
     }
 }

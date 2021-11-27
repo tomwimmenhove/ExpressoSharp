@@ -4,9 +4,15 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ExpressoSharp
 {
-    public class ExpressoProperty<T> : ExpressoVariable
+    public class ExpressoProperty<T> : IExpressoVariable
     {
+        public string Name { get; }
+        public Type Type { get; }
+        public bool IsDynamic { get; }
+
         public T Value { get; set; }
+
+        MemberDeclarationSyntax[] IExpressoVariable.SyntaxNodes { get; set; }
 
         private string _getterName { get; }
         private string _setterName { get; }
@@ -78,10 +84,10 @@ namespace ExpressoSharp
                     .AddVariables(SyntaxFactory.VariableDeclarator(_setterName)))
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
-            SyntaxNodes = new MemberDeclarationSyntax[] { getterSyntaxNode, setterSyntaxNode, propertySyntaxNode, };
+            ((IExpressoVariable) this).SyntaxNodes = new MemberDeclarationSyntax[] { getterSyntaxNode, setterSyntaxNode, propertySyntaxNode, };
         }
 
-        internal override void Init(Type type)
+        void IExpressoVariable.Init(Type type)
         {
             /* Attach the getters and setters in the compiled class for this variable to
              * the getters and setters for this variable's Value property */
