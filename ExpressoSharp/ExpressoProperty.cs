@@ -56,7 +56,7 @@ namespace ExpressoSharp
             /* This is the property that the compiled expression will use as it's 'variable'.
              * It will call a getter and setter provided by us behind the scenes */
             var propertySyntaxNode = SyntaxFactory.PropertyDeclaration(typeSyntax, SyntaxFactory.Identifier(Name))
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword),
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
                     SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddAccessorListAccessors( 
                     /* Add a getter */

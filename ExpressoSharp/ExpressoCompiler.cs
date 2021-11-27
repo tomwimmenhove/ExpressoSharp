@@ -25,8 +25,8 @@ namespace ExpressoSharp
             ICollection<IExpressoVariable> variables, bool objectsAsDynamic, params string[] parameterNames) where T : Delegate
         {
             var method = new ExpressoMethod<T>(expression, objectsAsDynamic, parameterNames);
-            var assembly = Compile("SingleNameSpace", "SingleClass", variables, method);
-            var assemblyType = assembly.GetType("SingleNameSpace.SingleClass");
+            var assembly = Compile("ExpressoSharp", "ExpressoClass", variables, method);
+            var assemblyType = assembly.GetType("ExpressoSharp.ExpressoClass");
 
             InitializeVariables(assemblyType, variables);
 
@@ -43,8 +43,8 @@ namespace ExpressoSharp
 
         public static Delegate[] CompileExpressions(ICollection<IExpressoVariable> variables, params IExpressoMethod[] methods)
         {
-            var assembly = Compile("SingleNameSpace", "SingleClass", variables, methods);
-            var assemblyType = assembly.GetType("SingleNameSpace.SingleClass");
+            var assembly = Compile("ExpressoSharp", "ExpressoClass", variables, methods);
+            var assemblyType = assembly.GetType("ExpressoSharp.ExpressoClass");
 
             InitializeVariables(assemblyType, variables);
             
