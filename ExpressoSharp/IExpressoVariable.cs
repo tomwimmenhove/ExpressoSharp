@@ -17,6 +17,6 @@ namespace ExpressoSharp
 
         MemberDeclarationSyntax[] SyntaxNodes { get; set; }
 
-        void Init(Type type);
+        void PostCompilation(Type type);
     }
 }

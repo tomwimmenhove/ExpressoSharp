@@ -64,6 +64,6 @@ namespace ExpressoSharp
             ((IExpressoVariable) this).SyntaxNodes = new MemberDeclarationSyntax[] { fieldSyntaxNode };
         }
 
-        void IExpressoVariable.Init(Type type) { }
+        void IExpressoVariable.PostCompilation(Type type) { }
     }
 }

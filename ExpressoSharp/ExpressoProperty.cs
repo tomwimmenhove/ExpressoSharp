@@ -73,7 +73,8 @@ namespace ExpressoSharp
                     )
                 );
 
-            /* These are the getter and setter that will be set by us to 'attach' it to our local value */
+            /* These are the getter and setter fields that will be set
+             * in the IExpressoVariable.PostCompilation() method */
             var getterSyntaxNode = SyntaxFactory.FieldDeclaration(SyntaxFactory.VariableDeclaration(
                 SyntaxFactory.ParseTypeName($"System.Func<{typeName}>"))
                     .AddVariables(SyntaxFactory.VariableDeclarator(_getterName)))
@@ -84,15 +85,17 @@ namespace ExpressoSharp
                     .AddVariables(SyntaxFactory.VariableDeclarator(_setterName)))
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword));
 
-            ((IExpressoVariable) this).SyntaxNodes = new MemberDeclarationSyntax[] { getterSyntaxNode, setterSyntaxNode, propertySyntaxNode, };
+            ((IExpressoVariable) this).SyntaxNodes = new MemberDeclarationSyntax[]
+                { getterSyntaxNode, setterSyntaxNode, propertySyntaxNode, };
         }
 
-        void IExpressoVariable.Init(Type type)
+        void IExpressoVariable.PostCompilation(Type type)
         {
-            /* Attach the getters and setters in the compiled class for this variable to
-             * the getters and setters for this variable's Value property */
-            Func<T> valueGetter = () => Value;
-            Action<T> valueSetter = (value) => Value = value;
+            /* Set the getter and setter delegates of the compiled type
+             * the getter and setter of this variable's Value property */
+            var valueProperty = GetType().GetProperty(nameof(Value));
+            var valueGetter = Delegate.CreateDelegate(typeof(Func<T>),   this, valueProperty.GetGetMethod());
+            var valueSetter = Delegate.CreateDelegate(typeof(Action<T>), this, valueProperty.GetSetMethod());
 
             type.GetField(_getterName).SetValue(null, valueGetter);;
             type.GetField(_setterName).SetValue(null, valueSetter);

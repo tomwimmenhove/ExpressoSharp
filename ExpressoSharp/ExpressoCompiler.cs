@@ -71,7 +71,7 @@ namespace ExpressoSharp
         {
             foreach(var variable in variables)
             {
-                variable.Init(type);
+                variable.PostCompilation(type);
             }
         }
 
