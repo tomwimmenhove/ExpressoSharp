@@ -59,8 +59,7 @@ namespace ExpressoSharp
                     SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                 .AddAccessorListAccessors( 
                     /* Add a getter */
-                    SyntaxFactory.AccessorDeclaration(
-                        SyntaxKind.GetAccessorDeclaration,
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration,
                         SyntaxFactory.Block(
                             SyntaxFactory.ReturnStatement(
                                 SyntaxFactory.InvocationExpression(SyntaxFactory.IdentifierName(_getterName))
@@ -68,8 +67,7 @@ namespace ExpressoSharp
                         )
                     ),
                     /* And a setter */
-                    SyntaxFactory.AccessorDeclaration(
-                        SyntaxKind.SetAccessorDeclaration,
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration,
                         SyntaxFactory.Block(
                             SyntaxFactory.ExpressionStatement(
                                 SyntaxFactory.InvocationExpression(SyntaxFactory.IdentifierName(_setterName))

@@ -37,33 +37,33 @@ namespace ExpressoSharp
             /* Use reflection to determine how T (which is a delegate) is to be invoked */
             var invokeMethod = typeof(T).GetMethod("Invoke");
             var parameters = invokeMethod.GetParameters();
-            if (parameters.Count() != parameterNames.Count())
+            if (parameters.Length != parameterNames.Length)
             {
                 throw new ArgumentException($"Number of parameter names ({parameters.Count()}) does not match the numbers of parameters of the delegate type ({parameterNames.Count()})");
             }
 
+            _delegateType = typeof(T);
             Expression = expression;
             ReturnType = invokeMethod.ReturnType;
             ReturnsDynamic = objectsAsDynamic && invokeMethod.ReturnType == typeof(object);
-            _delegateType = typeof(T);
-
-            /* Use this information to create the ExpressoParameter list with the correct types */
-            Parameters = new ExpressoParameter[parameters.Count()];
-            for (var i = 0; i < parameters.Count(); i++)
-            {
-                var parameterType = parameters[i].ParameterType;
-
-                Parameters[i] = new ExpressoParameter(parameterNames[i], parameterType,
-                    objectsAsDynamic && parameterType == typeof(object));
-            }
 
             /* Parse the expression that is to be compiled */
-            var parsedExpression = SyntaxFactory.ParseExpression(Expression);
+            var parsedExpression = SyntaxFactory.ParseExpression(expression);
             var errors = parsedExpression.GetDiagnostics()
                 .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
             if (errors.Any())
             {
                 throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
+            }
+
+            /* Use this information to create the ExpressoParameter list with the correct types */
+            Parameters = new ExpressoParameter[parameters.Length];
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                var parameterType = parameters[i].ParameterType;
+
+                Parameters[i] = new ExpressoParameter(parameterNames[i], parameterType,
+                    objectsAsDynamic && parameterType == typeof(object));
             }
 
             /* The return type of our method (void or not void)
