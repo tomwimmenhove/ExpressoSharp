@@ -111,7 +111,7 @@ namespace ExpressoSharp
 
             var compilationUnit = CreateCompilationUnitSyntax(namespaceName, className, variables, methods);
 
-            System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
+            //System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
 
             return Compile(compilationUnit.SyntaxTree, usedAssemblies);
         }

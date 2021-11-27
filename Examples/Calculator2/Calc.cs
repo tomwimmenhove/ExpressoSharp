@@ -18,7 +18,7 @@ namespace Calculator
         private static Regex regex = new Regex(@"^\s*([a-zA-Z_$][a-zA-Z_$0-9]*)\s*\=\s*(.*)$", RegexOptions.Compiled);
 
         /* A list of variables used */
-        private List<ExpressoVariable<T>> _variables = new List<ExpressoVariable<T>>();
+        private List<ExpressoProperty<T>> _variables = new List<ExpressoProperty<T>>();
 
         private bool _isDynamic;
         private Dictionary<string, Func<bool>> _commands;
@@ -159,7 +159,7 @@ namespace Calculator
                     /* If the variable doesn't already exist, add it with the result as it's initial value. */
                     else
                     {
-                        _variables.Add(new ExpressoVariable<T>(_isDynamic, assignTo, result));
+                        _variables.Add(new ExpressoProperty<T>(_isDynamic, assignTo, result));
                     }
                 }
 
