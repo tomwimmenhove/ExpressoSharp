@@ -12,17 +12,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ExpressoSharp
 {
-    public interface IExpressoMethod
-    {
-        string Name { get; }
-        ExpressoParameter[] Parameters { get; }
-        Type ReturnType { get; }
-        bool ReturnsDynamic { get; }
-
-        Type DelegateType { get; }
-        MethodDeclarationSyntax SyntaxNode { get; }
-    }
-
     public class ExpressoMethod<T> : IExpressoMethod where T : Delegate
     {
         public string Name => _name;
