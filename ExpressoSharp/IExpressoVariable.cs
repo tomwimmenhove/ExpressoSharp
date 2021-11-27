@@ -5,6 +5,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ExpressoSharp
@@ -15,7 +16,7 @@ namespace ExpressoSharp
         Type Type { get; }
         bool IsDynamic { get; }
 
-        MemberDeclarationSyntax[] SyntaxNodes { get; }
+        IReadOnlyCollection<MemberDeclarationSyntax> SyntaxNodes { get; }
 
         void PostCompilation(Type type);
     }

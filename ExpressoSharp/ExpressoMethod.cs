@@ -5,6 +5,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -16,7 +17,7 @@ namespace ExpressoSharp
     {
         public string Name => _name;
         public string Expression { get; }
-        public ExpressoParameter[] Parameters { get; }
+        public IReadOnlyCollection<ExpressoParameter> Parameters { get; }
         public Type ReturnType { get; }
         public bool ReturnsDynamic { get; }
 
@@ -57,14 +58,15 @@ namespace ExpressoSharp
             }
 
             /* Use this information to create the ExpressoParameter list with the correct types */
-            Parameters = new ExpressoParameter[parameters.Length];
+            var expressoParameters = new ExpressoParameter[parameters.Length];
             for (var i = 0; i < parameters.Length; i++)
             {
                 var parameterType = parameters[i].ParameterType;
 
-                Parameters[i] = new ExpressoParameter(parameterNames[i], parameterType,
+                expressoParameters[i] = new ExpressoParameter(parameterNames[i], parameterType,
                     objectsAsDynamic && parameterType == typeof(object));
             }
+            Parameters = expressoParameters;
 
             /* The return type of our method (void or not void)
              * changes the way the SyntaxNode is constructed */

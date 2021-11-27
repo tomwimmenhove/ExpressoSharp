@@ -5,6 +5,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -18,7 +19,7 @@ namespace ExpressoSharp
 
         public T Value { get; set; }
 
-        MemberDeclarationSyntax[] IExpressoVariable.SyntaxNodes => _syntaxNodes;
+        IReadOnlyCollection<MemberDeclarationSyntax> IExpressoVariable.SyntaxNodes => _syntaxNodes;
 
         private string _getterName { get; }
         private string _setterName { get; }
@@ -73,7 +74,6 @@ namespace ExpressoSharp
                                 SyntaxFactory.InvocationExpression(SyntaxFactory.IdentifierName(_setterName))
                                 .AddArgumentListArguments(SyntaxFactory.Argument(SyntaxFactory.IdentifierName("value")))
                             )
-                                
                         )
                     )
                 );

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ExpressoSharp
@@ -6,7 +7,7 @@ namespace ExpressoSharp
     public interface IExpressoMethod
     {
         string Name { get; }
-        ExpressoParameter[] Parameters { get; }
+        IReadOnlyCollection<ExpressoParameter> Parameters { get; }
         Type ReturnType { get; }
         bool ReturnsDynamic { get; }
 
