@@ -5,13 +5,37 @@
  */
 
 using System;
+using ExpressoSharp;
 
 namespace Calculator
 {
+    class TestClass{
+        public int Bla {get; set;}
+    }
     class Program
     {
         static void Main(string[] args)
         {
+            // var t = new TestClass();
+            // var prop = t.GetType().GetProperty("Bla");
+            // var getter = (Func<TestClass, int>) Delegate.CreateDelegate(typeof(Func<TestClass, int>), prop.GetGetMethod());
+
+            // t.Bla = 42;
+
+            // Console.WriteLine(getter(t));
+
+            // return;
+            //var v1 = ExpressoVariable.Create<string>("s", "test");
+            var v1 = new ExpressoVariable<string>("s", "test");
+
+            var calc1 = ExpressoCompiler.CompileExpression<Action>("s = \"tost\"", new[] { v1 });
+            var calc2 = ExpressoCompiler.CompileExpression<Func<double, string>>("s += \"icle\"", new[] { v1 }, "x");
+            calc1();
+
+            var q = calc2(12);
+
+            //return;
+
             if (args.Length > 1)
             {
                 Console.Error.WriteLine("The only accepted argument is the name of the system type to use.");

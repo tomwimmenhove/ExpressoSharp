@@ -159,7 +159,7 @@ namespace Calculator
                     /* If the variable doesn't already exist, add it with the result as it's initial value. */
                     else
                     {
-                        _variables.Add(ExpressoVariable.Create<T>(_isDynamic, assignTo, result));
+                        _variables.Add(new ExpressoVariable<T>(_isDynamic, assignTo, result));
                     }
                 }
 

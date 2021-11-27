@@ -111,7 +111,7 @@ namespace ExpressoSharp
 
             var compilationUnit = CreateCompilationUnitSyntax(namespaceName, className, variables, methods);
 
-            //System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
+            System.Diagnostics.Debug.WriteLine(compilationUnit.NormalizeWhitespace().ToString());
 
             return Compile(compilationUnit.SyntaxTree, usedAssemblies);
         }
@@ -123,8 +123,7 @@ namespace ExpressoSharp
                     null, SyntaxFactory.ParseName("System.Math")))
                 .AddMembers(SyntaxFactory.NamespaceDeclaration(SyntaxFactory.IdentifierName(nameSpaceName)).AddMembers(
                     SyntaxFactory.ClassDeclaration(className).AddMembers(
-                        variables.Select(x => (MemberDeclarationSyntax)x.PropertySyntaxNode)
-                            .Concat(variables.Select(x => (MemberDeclarationSyntax)x.FieldSyntaxNode))
+                        variables.SelectMany(x => x.SyntaxNodes)
                             .Concat(methods.Select(x => (MemberDeclarationSyntax)x.SyntaxNode)).ToArray()
                     )));
 
