@@ -55,6 +55,7 @@ namespace ExpressoSharp
             CompileExpressions(new IExpressoVariable[0], methods);
 
         /* Compile a dummy program to force all needed assemblies to be loaded */
+        // XXX: trade-off: slower Prime() for initializing dynamic type as well?
         public static void Prime() => CompileExpression<Func<object>>("null");
 
         private static Delegate DelegateFromMethod(Type type, IExpressoMethod method)
