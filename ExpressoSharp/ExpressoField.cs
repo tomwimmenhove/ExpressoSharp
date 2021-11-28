@@ -64,6 +64,10 @@ namespace ExpressoSharp
                 var security = new ExpressoSecurity();
                 security.Visit(initialExpression);
 
+                /* Rewrite */
+                var rewriter = new ExpressoRewriter();
+                initialExpression = (ExpressionSyntax)rewriter.Visit(initialExpression);
+
                 variableDeclaration = variableDeclaration.WithInitializer(
                     SyntaxFactory.EqualsValueClause(initialExpression));
             }

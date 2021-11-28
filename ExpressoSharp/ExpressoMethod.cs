@@ -61,6 +61,10 @@ namespace ExpressoSharp
             var security = new ExpressoSecurity();
             security.Visit(parsedExpression);
 
+            /* Rewrite */
+            var rewriter = new ExpressoRewriter();
+            parsedExpression = (ExpressionSyntax) rewriter.Visit(parsedExpression);
+
             /* Use this information to create the ExpressoParameter list with the correct types */
             var expressoParameters = new ExpressoParameter[parameters.Length];
             for (var i = 0; i < parameters.Length; i++)
