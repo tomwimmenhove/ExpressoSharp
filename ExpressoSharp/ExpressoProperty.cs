@@ -15,7 +15,7 @@ namespace ExpressoSharp
     {
         public string Name { get; }
         public Type Type { get; }
-        public bool IsDynamic { get; }
+        public IExpressoVariableOptions Options { get; }
 
         public T Value { get; set; }
 
@@ -26,21 +26,21 @@ namespace ExpressoSharp
         private MemberDeclarationSyntax[] _syntaxNodes;
 
         public ExpressoProperty(string name, T value = default)
-            : this(false, name, value)
+            : this(new ExpressoPropertyOptions(), name, value)
         { }
 
-        public ExpressoProperty(bool isDynamic, string name, T value = default)
+        public ExpressoProperty(ExpressoPropertyOptions options, string name, T value = default)
         {
             var type = typeof(T);
-            if (isDynamic && type != typeof(object))
+            if (options.IsDynamic && type != typeof(object))
             {
-                throw new ArgumentException($"The {nameof(type)} parameter must be {typeof(object)} when {nameof(isDynamic)} is set to true");
+                throw new ArgumentException($"The {nameof(type)} parameter must be {typeof(object)} when the {nameof(options.IsDynamic)} option is set to true");
             }
 
             Value = value;
             Name = name;
             Type = type;
-            IsDynamic = isDynamic;
+            Options = options;
 
             /* A unique name for the getter */
             var unique = $"{name}_{Guid.NewGuid().ToString("N")}";
@@ -50,7 +50,7 @@ namespace ExpressoSharp
             var variableDeclaration = SyntaxFactory.VariableDeclarator(name);
 
             /* Since the dynamic type is not a real type, it has to be set explicitely */
-            var typeName = isDynamic ? "dynamic" : type.FullName;
+            var typeName = options.IsDynamic ? "dynamic" : type.FullName;
             var typeSyntax = SyntaxFactory.ParseTypeName(typeName);
 
             /* This is the property that the compiled expression will use as it's 'variable'.

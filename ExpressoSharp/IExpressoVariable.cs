@@ -14,7 +14,7 @@ namespace ExpressoSharp
     {
         string Name { get; }
         Type Type { get; }
-        bool IsDynamic { get; }
+        IExpressoVariableOptions Options { get; }
 
         IReadOnlyCollection<MemberDeclarationSyntax> SyntaxNodes { get; }
 

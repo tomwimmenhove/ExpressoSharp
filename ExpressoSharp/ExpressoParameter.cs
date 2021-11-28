@@ -14,22 +14,26 @@ namespace ExpressoSharp
     {
         public string Name { get; }
         public Type Type { get; }
-        public bool IsDynamic { get; }
+        public ExpressoParameterOptions Options { get; }
 
         internal ParameterSyntax SyntaxNode { get; }
 
-        public ExpressoParameter(string name, Type type, bool isDynamic = false)
+        public ExpressoParameter(string name, Type type)
+            : this(new ExpressoParameterOptions(), name, type)
+        { }
+
+        public ExpressoParameter(ExpressoParameterOptions options, string name, Type type)
         {
-            if (isDynamic && type != typeof(object))
+            if (options.IsDynamic && type != typeof(object))
             {
-                throw new ArgumentException($"The {nameof(type)} parameter must be {typeof(object)} when {nameof(isDynamic)} is set to true");
+                throw new ArgumentException($"The {nameof(type)} parameter must be {typeof(object)} when the {nameof(options.IsDynamic)} option is set to true");
             }
 
             Name = name;
             Type = type;
-            IsDynamic = isDynamic;
+            Options = options;
 
-            var typeSyntax = isDynamic
+            var typeSyntax = options.IsDynamic
                 ? SyntaxFactory.ParseTypeName("dynamic")
                 : SyntaxFactory.ParseTypeName(type.FullName);
 

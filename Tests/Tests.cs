@@ -95,11 +95,13 @@ namespace Tests
         [TestMethod]
         public void DynamicTest()
         {
-            var v1 = new ExpressoProperty<dynamic>(true, "s", "test");
+            var dynamicPropertyOptions = new ExpressoPropertyOptions() { IsDynamic = true };
+
+            var v1 = new ExpressoProperty<dynamic>(dynamicPropertyOptions, "s", "test");
             var fn1 = ExpressoCompiler.CompileExpression<Func<bool>>("s.Length == 4", new[] { v1 });
             Assert.IsTrue(fn1());
 
-            var v2 = new ExpressoProperty<dynamic>(false, "s", "test");
+            var v2 = new ExpressoProperty<dynamic>("s", "test");
             try
             {
                 ExpressoCompiler.CompileExpression<Func<int>>("s.Length", new[] { v2 });
@@ -112,7 +114,7 @@ namespace Tests
             var fn3 = ExpressoCompiler.CompileExpression<Func<dynamic>>("\"test\"");
             Assert.AreEqual(fn3().Length, 4);
 
-            var v3 = new ExpressoProperty<dynamic>(true, "s", 42);
+            var v3 = new ExpressoProperty<dynamic>(dynamicPropertyOptions, "s", 42);
 
             var fn4 = ExpressoCompiler.CompileExpression<Func<Type>>("s.GetType()", new[] { v3 });
             Assert.AreEqual(fn4(), typeof(int));
@@ -167,9 +169,12 @@ namespace Tests
         [TestMethod]
         public void DynamicFieldTest()
         {
-            var v = new ExpressoField<dynamic>(true, "s", "\"1234\"");
+            var dynamicFieldOptions = new ExpressoFieldOptions() { IsDynamic = true };
+            var dynamicMethodOptions = new ExpressoMethodOptions() { ReturnsDynamic = true, DefaultParameterOptions = new ExpressoParameterOptions { IsDynamic = true } };
 
-            var method1 = new ExpressoMethod<Func<dynamic>>("s.Length", true);
+            var v = new ExpressoField<dynamic>(dynamicFieldOptions, "s", "\"1234\"");
+
+            var method1 = new ExpressoMethod<Func<dynamic>>(dynamicMethodOptions, "s.Length");
             var method2 = new ExpressoMethod<Action<dynamic>>("s = x", "x");
 
             var funcs = ExpressoCompiler.CompileExpressions(new[] { v }, method1, method2);
@@ -182,6 +187,126 @@ namespace Tests
             fn2("12345");
 
             Assert.AreEqual(fn1(), 5);
+        }
+
+        [TestMethod]
+        public void ForceDoubleTest()
+        {
+            var options = new ExpressoMethodOptions() { ReturnsDynamic = true };
+
+            var fn1 = ExpressoCompiler.CompileExpression<Func<dynamic>>(options, "12");
+            Assert.AreEqual(fn1().GetType(), typeof(int));
+
+            options.ForceNumericDouble = true;
+
+            var fn2 = ExpressoCompiler.CompileExpression<Func<dynamic>>(options, "12");
+            Assert.AreEqual(fn2().GetType(), typeof(double));
+        }
+
+
+        [TestMethod]
+        public void SecurityTestAllowNoneSimpleReturn()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.None };  
+            ExpressoCompiler.CompileExpression<Func<double, double>>(options, "x", "x");
+        }
+
+        [TestMethod]
+        public void SecurityTestAllowAll()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowAll };  
+            ExpressoCompiler.CompileExpression<Func<double, double>>(options, "x", "x")(42.42);
+            ExpressoCompiler.CompileExpression<Func<double, double>>(options, "Abs(x)", "x")(42.42);
+            ExpressoCompiler.CompileExpression<Func<string, int>>(options, "s.Length", "s")("hello");
+            ExpressoCompiler.CompileExpression<Func<double, Type>>(options, "x.GetType()", "x")(42.42);
+        }
+
+
+        [TestMethod, ExpectedException(typeof(SecurityException))]
+        public void SecurityTestAllowNoneMethodsMathMethod()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.None };  
+            ExpressoCompiler.CompileExpression<Func<double, double>>(options, "Abs(x)", "x")(42.42);
+        }
+
+        [TestMethod, ExpectedException(typeof(SecurityException))]
+        public void SecurityTestAllowNoneMethodsMemberAccess()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.None };  
+            ExpressoCompiler.CompileExpression<Func<string, int>>(options, "s.Length", "s")("hello");
+        }
+
+        [TestMethod, ExpectedException(typeof(SecurityException))]
+        public void SecurityTestAllowNoneMethodsMemberInvocation()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.None };  
+            ExpressoCompiler.CompileExpression<Func<double, Type>>(options, "x.GetType()", "x")(42.42);
+        }
+
+
+        [TestMethod]
+        public void SecurityTestAllowMathMethodsMathMethod()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMathMethods };  
+            ExpressoCompiler.CompileExpression<Func<double, double>>(options, "Abs(x)", "x")(42.42);
+        }
+
+        [TestMethod, ExpectedException(typeof(SecurityException))]
+        public void SecurityTestAllowMathMethodsMemberAccess()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMathMethods };  
+            ExpressoCompiler.CompileExpression<Func<string, int>>(options, "s.Length", "s")("hello");
+        }
+
+        [TestMethod, ExpectedException(typeof(SecurityException))]
+        public void SecurityTestAllowMathMethodsMemberInvocation()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMathMethods };  
+            ExpressoCompiler.CompileExpression<Func<double, Type>>(options, "x.GetType()", "x")(42.42);
+        }
+
+
+        [TestMethod, ExpectedException(typeof(SecurityException))]
+        public void SecurityTestAllowMemberAccessMathMethod()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMemberAccess };  
+            ExpressoCompiler.CompileExpression<Func<double, double>>(options, "Abs(x)", "x")(42.42);
+        }
+
+        [TestMethod]
+        public void SecurityTestAllowMemberAccessMemberAccess()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMemberAccess };  
+            ExpressoCompiler.CompileExpression<Func<string, int>>(options, "s.Length", "s")("hello");
+        }
+
+        [TestMethod, ExpectedException(typeof(SecurityException))]
+        public void SecurityTestAllowMemberAccessnMemberInvocation()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMemberAccess };  
+            ExpressoCompiler.CompileExpression<Func<double, Type>>(options, "x.GetType()", "x")(42.42);
+        }
+
+
+        [TestMethod, ExpectedException(typeof(SecurityException))]
+        public void SecurityTestAllowMemberInvokationMathMethod()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMemberAccess | eExpressoSecurityAccess.AllowMemberInvokation };  
+            ExpressoCompiler.CompileExpression<Func<double, double>>(options, "Abs(x)", "x")(42.42);
+        }
+
+        [TestMethod]
+        public void SecurityTestAllowMemberInvokationMemberAccess()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMemberAccess | eExpressoSecurityAccess.AllowMemberInvokation };  
+            ExpressoCompiler.CompileExpression<Func<string, int>>(options, "s.Length", "s")("hello");
+        }
+        
+        [TestMethod]
+        public void SecurityTestAllowMemberInvokationMemberInvocation()
+        {
+            var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMemberAccess | eExpressoSecurityAccess.AllowMemberInvokation };  
+            ExpressoCompiler.CompileExpression<Func<double, Type>>(options, "x.GetType()", "x")(42.42);
         }
     }
 }

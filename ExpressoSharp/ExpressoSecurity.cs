@@ -9,13 +9,54 @@ namespace ExpressoSharp
 {
     internal class ExpressoSecurity : CSharpSyntaxWalker
     {
+        private const string _errorFormat = "The name '{0}' does not exist in the current context";
+
+        private IExpressoSecurityOptions _options;
+        private HashSet<string> _allowedMethods = new HashSet<string>();
+
+        public static void Check(IExpressoSecurityOptions options, SyntaxNode node)
+        {
+            if (!options.ExpressoSecurityAccess.HasFlag(eExpressoSecurityAccess.AllowAll))
+            {
+                var security = new ExpressoSecurity(options);
+                security.Visit(node);
+            }
+        }
+
+        public ExpressoSecurity(IExpressoSecurityOptions options)
+        {
+            _options = options;
+
+            if (options.ExpressoSecurityAccess == 0)
+            {
+                return;
+            }
+
+            if (options.ExpressoSecurityAccess.HasFlag(eExpressoSecurityAccess.AllowMathMethods))
+            {
+                _allowedMethods = new HashSet<string>(typeof(Math).GetMethods().Select(x => x.Name));
+            }
+        }
+
+        public override void VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
+        {
+            if (!_options.ExpressoSecurityAccess.HasFlag(eExpressoSecurityAccess.AllowMemberAccess))
+            {
+                throw new SecurityException(string.Format(_errorFormat, node.Name));
+            }
+        }
+
         public override void VisitInvocationExpression(InvocationExpressionSyntax node)
         {
-            var okNames = new HashSet<string>(typeof(Math).GetMethods().Concat(typeof(object).GetMethods()).Select(x => x.Name));
-
-            if (node.Expression is IdentifierNameSyntax id && !okNames.Contains(id.Identifier.ValueText))
+            if (node.Expression is IdentifierNameSyntax id && !_allowedMethods.Contains(id.Identifier.ValueText))
             {
-                throw new SecurityException($"The name '{id.Identifier.ValueText}' does not exist in the current context");
+                throw new SecurityException(string.Format(_errorFormat, id.Identifier.ValueText));
+            }
+
+            if (node.Expression is MemberAccessExpressionSyntax ma &&
+                !_options.ExpressoSecurityAccess.HasFlag(eExpressoSecurityAccess.AllowMemberInvokation))
+            {
+                throw new SecurityException(string.Format(_errorFormat, ma.Name));
             }
 
             foreach (var child in node.ChildNodes())

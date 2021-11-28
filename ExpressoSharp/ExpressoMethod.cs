@@ -5,6 +5,7 @@
  */
 
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -19,34 +20,44 @@ namespace ExpressoSharp
         public string Expression { get; }
         public IReadOnlyCollection<ExpressoParameter> Parameters { get; }
         public Type ReturnType { get; }
-        public bool ReturnsDynamic { get; }
+        public ExpressoMethodOptions Options { get; }
 
-        Type IExpressoMethod.DelegateType => _delegateType;
+        Type IExpressoMethod.DelegateType => typeof(T);
         MethodDeclarationSyntax IExpressoMethod.SyntaxNode => _syntaxNode;
 
         private string _name = UniqueName();
-        private Type _delegateType;
         private MethodDeclarationSyntax _syntaxNode;
 
-        public ExpressoMethod(string expression, params string[] parameterNames)
-             : this(expression, false, parameterNames)
+        public ExpressoMethod(string expression, ExpressoParameter[] parameters)
+             : this(new ExpressoMethodOptions(), expression, parameters, null, parameters.Length)
         { }
 
-        public ExpressoMethod(string expression, bool objectsAsDynamic,
-            params string[] parameterNames)
+        public ExpressoMethod(string expression, params string[] parameterNames)
+             : this(new ExpressoMethodOptions(), expression, null, parameterNames, parameterNames.Length)
+        { }
+
+        public ExpressoMethod(ExpressoMethodOptions options, string expression, ExpressoParameter[] parameters)
+             : this(options, expression, parameters, null, parameters.Length)
+        { }
+
+        public ExpressoMethod(ExpressoMethodOptions options, string expression, params string[] parameterNames)
+             : this(options, expression, null, parameterNames, parameterNames.Length)
+        { }
+
+        private ExpressoMethod(ExpressoMethodOptions options, string expression,
+            ExpressoParameter[] parameters, string[] parameterNames, int numParameters)
         {
             /* Use reflection to determine how T (which is a delegate) is to be invoked */
             var invokeMethod = typeof(T).GetMethod("Invoke");
-            var parameters = invokeMethod.GetParameters();
-            if (parameters.Length != parameterNames.Length)
+            var invokeParameters = invokeMethod.GetParameters();
+            if (invokeParameters.Length != numParameters)
             {
-                throw new ArgumentException($"Number of parameter names ({parameters.Count()}) does not match the numbers of parameters of the delegate type ({parameterNames.Count()})");
+                throw new ArgumentException($"Number of parameter names ({invokeParameters.Count()}) does not match the numbers of parameters of the delegate type ({parameterNames.Count()})");
             }
 
-            _delegateType = typeof(T);
+            Options = options;
             Expression = expression;
             ReturnType = invokeMethod.ReturnType;
-            ReturnsDynamic = objectsAsDynamic && invokeMethod.ReturnType == typeof(object);
 
             /* Parse the expression that is to be compiled */
             var parsedExpression = SyntaxFactory.ParseExpression(expression);
@@ -57,24 +68,17 @@ namespace ExpressoSharp
                 throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
             }
 
-            /* Security check */
-            var security = new ExpressoSecurity();
-            security.Visit(parsedExpression);
+            parsedExpression = (ExpressionSyntax) ExpressoRewriter.Rewrite(options, parsedExpression);
+            ExpressoSecurity.Check(options, parsedExpression);
 
-            /* Rewrite */
-            var rewriter = new ExpressoRewriter();
-            parsedExpression = (ExpressionSyntax) rewriter.Visit(parsedExpression);
-
-            /* Use this information to create the ExpressoParameter list with the correct types */
-            var expressoParameters = new ExpressoParameter[parameters.Length];
-            for (var i = 0; i < parameters.Length; i++)
+            if (parameters != null)
             {
-                var parameterType = parameters[i].ParameterType;
-
-                expressoParameters[i] = new ExpressoParameter(parameterNames[i], parameterType,
-                    objectsAsDynamic && parameterType == typeof(object));
+                Parameters = parameters;
             }
-            Parameters = expressoParameters;
+            else
+            {
+                Parameters = CreateParameters(options, parameterNames, invokeParameters);
+            }
 
             /* The return type of our method (void or not void)
              * changes the way the SyntaxNode is constructed */
@@ -88,7 +92,7 @@ namespace ExpressoSharp
             }
             else
             {
-                var typeSyntax = ReturnsDynamic
+                var typeSyntax = options.ReturnsDynamic
                     ? SyntaxFactory.ParseTypeName("dynamic")
                     : SyntaxFactory.ParseTypeName(ReturnType.FullName);
 
@@ -97,6 +101,21 @@ namespace ExpressoSharp
                         Parameters.Select(x => x.SyntaxNode).ToArray())
                     .WithBody(SyntaxFactory.Block(SyntaxFactory.ReturnStatement(parsedExpression)));
             }
+        }
+
+        private static ExpressoParameter[] CreateParameters(ExpressoMethodOptions options,
+            string[] parameterNames, ParameterInfo[] parameterInfo)
+        {
+            var expressoParameters = new ExpressoParameter[parameterInfo.Length];
+            for (var i = 0; i < parameterInfo.Length; i++)
+            {
+                var parameterType = parameterInfo[i].ParameterType;
+
+                expressoParameters[i] = new ExpressoParameter(options.DefaultParameterOptions,
+                    parameterNames[i], parameterType);
+            }
+
+            return expressoParameters;
         }
 
         private static string UniqueName() => $"_{Guid.NewGuid().ToString("N")}";

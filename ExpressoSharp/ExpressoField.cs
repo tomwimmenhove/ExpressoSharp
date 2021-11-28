@@ -7,6 +7,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -17,7 +18,7 @@ namespace ExpressoSharp
     {
         public string Name { get; }
         public Type Type { get; }
-        public bool IsDynamic { get; }
+        public IExpressoVariableOptions Options { get; }
 
         IReadOnlyCollection<MemberDeclarationSyntax> IExpressoVariable.SyntaxNodes => _syntaxNodes;
 
@@ -26,23 +27,23 @@ namespace ExpressoSharp
         private MemberDeclarationSyntax[] _syntaxNodes;
 
         public ExpressoField(string name, string initializer = null)
-            : this(false, name, initializer)
+            : this(new ExpressoFieldOptions(), name, initializer)
         { }
 
-        public ExpressoField(bool isDynamic, string name, string initializer = null)
+        public ExpressoField(ExpressoFieldOptions options, string name, string initializer = null)
         {
             var type = typeof(T);
-            if (isDynamic && type != typeof(object))
+            if (options.IsDynamic && type != typeof(object))
             {
-                throw new ArgumentException($"The {nameof(type)} parameter must be {typeof(object)} when {nameof(isDynamic)} is set to true");
+                throw new ArgumentException($"The {nameof(type)} parameter must be {typeof(object)} when the {nameof(options.IsDynamic)} option is set to true");
             }
 
             Name = name;
             Type = type;
-            IsDynamic = isDynamic;
+            Options = options;
 
             /* Since the dynamic type is not a real type, it has to be set explicitely */
-            var typeSyntax = isDynamic
+            var typeSyntax = options.IsDynamic
                 ? SyntaxFactory.ParseTypeName("dynamic")
                 : SyntaxFactory.ParseTypeName(type.FullName);
 
@@ -60,13 +61,8 @@ namespace ExpressoSharp
                     throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
                 }
 
-                /* Security check */
-                var security = new ExpressoSecurity();
-                security.Visit(initialExpression);
-
-                /* Rewrite */
-                var rewriter = new ExpressoRewriter();
-                initialExpression = (ExpressionSyntax)rewriter.Visit(initialExpression);
+                initialExpression = (ExpressionSyntax)ExpressoRewriter.Rewrite(options, initialExpression);
+                ExpressoSecurity.Check(options, initialExpression);
 
                 variableDeclaration = variableDeclaration.WithInitializer(
                     SyntaxFactory.EqualsValueClause(initialExpression));

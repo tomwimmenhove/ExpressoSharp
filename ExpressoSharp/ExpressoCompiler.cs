@@ -19,12 +19,12 @@ namespace ExpressoSharp
     {
         public static T CompileExpression<T>(string expression,
             ICollection<IExpressoVariable> variables, params string[] parameterNames) where T : Delegate =>
-            CompileExpression<T>(expression, variables, false, parameterNames);
+            CompileExpression<T>(new ExpressoMethodOptions(), expression, variables, parameterNames);
 
-        public static T CompileExpression<T>(string expression,
-            ICollection<IExpressoVariable> variables, bool objectsAsDynamic, params string[] parameterNames) where T : Delegate
+        public static T CompileExpression<T>(ExpressoMethodOptions options, string expression,
+            ICollection<IExpressoVariable> variables, params string[] parameterNames) where T : Delegate
         {
-            var method = new ExpressoMethod<T>(expression, objectsAsDynamic, parameterNames);
+            var method = new ExpressoMethod<T>(options, expression, parameterNames);
             var assembly = Compile("ExpressoSharp", "ExpressoClass", variables, method);
             var assemblyType = assembly.GetType("ExpressoSharp.ExpressoClass");
 
@@ -33,13 +33,13 @@ namespace ExpressoSharp
             return (T) DelegateFromMethod(assemblyType, method);
         }
 
-        public static T CompileExpression<T>(string expression, bool objectsAsDynamic,
+        public static T CompileExpression<T>(ExpressoMethodOptions options, string expression,
             params string[] parameterNames) where T : Delegate =>
-            CompileExpression<T>(expression, new IExpressoVariable[0], objectsAsDynamic, parameterNames);            
+            CompileExpression<T>(options, expression, new IExpressoVariable[0], parameterNames);            
 
         public static T CompileExpression<T>(string expression,
             params string[] parameterNames) where T : Delegate =>
-            CompileExpression<T>(expression, new IExpressoVariable[0], false, parameterNames);            
+            CompileExpression<T>(expression, new IExpressoVariable[0], parameterNames);            
 
         public static Delegate[] CompileExpressions(ICollection<IExpressoVariable> variables, params IExpressoMethod[] methods)
         {
@@ -90,8 +90,8 @@ namespace ExpressoSharp
                 .ToList();
 
             /* Add additional assemblies in case the dynamic type is used */
-            if (methods.Any(x => x.ReturnsDynamic || x.Parameters.Any(y => y.IsDynamic)) ||
-                variables.Any(x => x.IsDynamic))
+            if (methods.Any(x => x.Options.ReturnsDynamic || x.Parameters.Any(y => y.Options.IsDynamic)) ||
+                variables.Any(x => x.Options.IsDynamic))
             {
                 usedAssemblies.Add(typeof(System.Runtime.CompilerServices.DynamicAttribute).Assembly.Location);
                 usedAssemblies.Add(typeof(Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfo).Assembly.Location);

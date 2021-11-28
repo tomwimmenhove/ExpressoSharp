@@ -71,6 +71,19 @@ namespace Calculator
 
         public void Run()
         {
+            var methodOptions = new ExpressoMethodOptions
+            {
+                ForceNumericDouble = true,
+                ReturnsDynamic = _isDynamic,
+                DefaultParameterOptions = new ExpressoParameterOptions
+                {
+                    IsDynamic = _isDynamic
+                }
+            };
+            var propertyOptions = new ExpressoPropertyOptions { IsDynamic = _isDynamic };
+
+            methodOptions.ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMathMethods;
+
             while (true)
             {
                 var line = ReadLine.Read("> ");
@@ -117,7 +130,7 @@ namespace Calculator
                 try
                 {
                     /* Compile the expression */
-                    func = ExpressoCompiler.CompileExpression<Func<T>>(expression, _variables.ToArray(), true);
+                    func = ExpressoCompiler.CompileExpression<Func<T>>(methodOptions, expression, _variables.ToArray());
                 }
                 catch (ParserException e)
                 {
@@ -159,7 +172,7 @@ namespace Calculator
                     /* If the variable doesn't already exist, add it with the result as it's initial value. */
                     else
                     {
-                        _variables.Add(new ExpressoProperty<T>(_isDynamic, assignTo, result));
+                        _variables.Add(new ExpressoProperty<T>(propertyOptions, assignTo, result));
                     }
                 }
 
