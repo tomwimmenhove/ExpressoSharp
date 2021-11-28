@@ -60,6 +60,10 @@ namespace ExpressoSharp
                     throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
                 }
 
+                /* Security check */
+                var security = new ExpressoSecurity();
+                security.Visit(initialExpression);
+
                 variableDeclaration = variableDeclaration.WithInitializer(
                     SyntaxFactory.EqualsValueClause(initialExpression));
             }

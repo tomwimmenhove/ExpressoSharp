@@ -57,6 +57,10 @@ namespace ExpressoSharp
                 throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
             }
 
+            /* Security check */
+            var security = new ExpressoSecurity();
+            security.Visit(parsedExpression);
+
             /* Use this information to create the ExpressoParameter list with the correct types */
             var expressoParameters = new ExpressoParameter[parameters.Length];
             for (var i = 0; i < parameters.Length; i++)

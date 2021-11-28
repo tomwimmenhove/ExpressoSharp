@@ -15,7 +15,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ExpressoSharp
 {
-    public class ExpressoCompiler
+    public static class ExpressoCompiler
     {
         public static T CompileExpression<T>(string expression,
             ICollection<IExpressoVariable> variables, params string[] parameterNames) where T : Delegate =>

@@ -121,7 +121,7 @@ namespace Calculator
                 }
                 catch (ParserException e)
                 {
-                    Console.Error.WriteLine($"Parse erro: {e.Message}");
+                    Console.Error.WriteLine($"Parse error: {e.Message}");
                     continue;
                 }
                 catch (CompilerException e)
