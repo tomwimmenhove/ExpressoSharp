@@ -39,11 +39,11 @@ namespace Simple
                 Console.WriteLine(calc1(3));
                 Console.WriteLine(calc2(new NonNativeTypeTest(4)));
             }
-            catch (ParserException e)
+            catch (ExpressoParserException e)
             {
                 Console.Error.WriteLine($"Parse erro: {e.Message}");
             }
-            catch (CompilerException e)
+            catch (ExpressoCompilerException e)
             {
                 Console.Error.WriteLine($"Compile error: {e.Message}");
             }

@@ -1,3 +1,9 @@
+/* This file is part of Expresso
+ *
+ * Copyright (c) 2021 Tom Wimmenhove. All rights reserved.
+ * Licensed under the MIT license. See LICENSE file in the project root for details.
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +48,7 @@ namespace ExpressoSharp
         {
             if (!_options.ExpressoSecurityAccess.HasFlag(eExpressoSecurityAccess.AllowMemberAccess))
             {
-                throw new SecurityException(string.Format(_errorFormat, node.Name));
+                throw new ExpressoSecurityException(string.Format(_errorFormat, node.Name));
             }
         }
 
@@ -50,13 +56,13 @@ namespace ExpressoSharp
         {
             if (node.Expression is IdentifierNameSyntax id && !_allowedMethods.Contains(id.Identifier.ValueText))
             {
-                throw new SecurityException(string.Format(_errorFormat, id.Identifier.ValueText));
+                throw new ExpressoSecurityException(string.Format(_errorFormat, id.Identifier.ValueText));
             }
 
             if (node.Expression is MemberAccessExpressionSyntax ma &&
                 !_options.ExpressoSecurityAccess.HasFlag(eExpressoSecurityAccess.AllowMemberInvokation))
             {
-                throw new SecurityException(string.Format(_errorFormat, ma.Name));
+                throw new ExpressoSecurityException(string.Format(_errorFormat, ma.Name));
             }
 
             foreach (var child in node.ChildNodes())

@@ -13,6 +13,8 @@ namespace Calculator1
     {
         static void Main(string[] args)
         {
+            var options = new ExpressoMethodOptions { ForceNumericDouble = true };
+            
             while (true)
             {
                 /* Read a simple mathematical expression from the command line */
@@ -30,7 +32,7 @@ namespace Calculator1
                 try
                 {
                     /* Compile the expression */
-                    var func = ExpressoCompiler.CompileExpression<Func<double>>(expression);
+                    var func = ExpressoCompiler.CompileExpression<Func<double>>(options, expression);
 
                     /* And call it */
                     var result = func();
@@ -39,13 +41,13 @@ namespace Calculator1
                     Console.WriteLine(result);
                 }
                 /* Catch anything that might've gone wrong during parsing... */
-                catch (ParserException e)
+                catch (ExpressoParserException e)
                 {
                     Console.Error.WriteLine($"Parse erro: {e.Message}");
                     continue;
                 }
                 /* ... during compilation... */
-                catch (CompilerException e)
+                catch (ExpressoCompilerException e)
                 {
                     Console.Error.WriteLine($"Compile error: {e.Message}");
                     continue;

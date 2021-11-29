@@ -42,12 +42,12 @@ namespace Tables
 
                     return func;
                 }
-                catch (ParserException e)
+                catch (ExpressoParserException e)
                 {
                     Console.Error.WriteLine($"Parse erro: {e.Message}");
                     continue;
                 }
-                catch (CompilerException e)
+                catch (ExpressoCompilerException e)
                 {
                     Console.Error.WriteLine($"Compile error: {e.Message}");
                     continue;

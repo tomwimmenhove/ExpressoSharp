@@ -65,7 +65,7 @@ namespace ExpressoSharp
                 .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
             if (errors.Any())
             {
-                throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
+                throw new ExpressoParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
             }
 
             parsedExpression = (ExpressionSyntax) ExpressoRewriter.Rewrite(options, parsedExpression);

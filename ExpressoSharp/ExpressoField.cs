@@ -7,7 +7,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -58,7 +57,7 @@ namespace ExpressoSharp
                     .Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error);
                 if (errors.Any())
                 {
-                    throw new ParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
+                    throw new ExpressoParserException(string.Join("\n", errors.Select(x => x.GetMessage())));
                 }
 
                 initialExpression = (ExpressionSyntax)ExpressoRewriter.Rewrite(options, initialExpression);

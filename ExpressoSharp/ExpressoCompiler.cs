@@ -146,7 +146,7 @@ namespace ExpressoSharp
                     var message = string.Join("\n",
                         result.Diagnostics.Where(x => x.IsWarningAsError || x.Severity == DiagnosticSeverity.Error)
                             .Select(x => x.GetMessage()));
-                    throw new CompilerException(message);
+                    throw new ExpressoCompilerException(message);
                 }
 
                 ms.Seek(0, SeekOrigin.Begin);

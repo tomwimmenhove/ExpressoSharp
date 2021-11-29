@@ -41,7 +41,7 @@ namespace Tests
                 ExpressoCompiler.CompileExpression<Action>("3 3")();
                 Assert.Fail();
             }
-            catch (ParserException)
+            catch (ExpressoParserException)
             {
             }
         }
@@ -55,7 +55,7 @@ namespace Tests
                 ExpressoCompiler.CompileExpression<Func<int>>("x")();
                 Assert.Fail();
             }
-            catch (CompilerException)
+            catch (ExpressoCompilerException)
             {
             }
         }
@@ -107,7 +107,7 @@ namespace Tests
                 ExpressoCompiler.CompileExpression<Func<int>>("s.Length", new[] { v2 });
                 Assert.Fail();
             }
-            catch (CompilerException)
+            catch (ExpressoCompilerException)
             {
             }
 
@@ -222,21 +222,21 @@ namespace Tests
         }
 
 
-        [TestMethod, ExpectedException(typeof(SecurityException))]
+        [TestMethod, ExpectedException(typeof(ExpressoSecurityException))]
         public void SecurityTestAllowNoneMethodsMathMethod()
         {
             var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.None };  
             ExpressoCompiler.CompileExpression<Func<double, double>>(options, "Abs(x)", "x")(42.42);
         }
 
-        [TestMethod, ExpectedException(typeof(SecurityException))]
+        [TestMethod, ExpectedException(typeof(ExpressoSecurityException))]
         public void SecurityTestAllowNoneMethodsMemberAccess()
         {
             var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.None };  
             ExpressoCompiler.CompileExpression<Func<string, int>>(options, "s.Length", "s")("hello");
         }
 
-        [TestMethod, ExpectedException(typeof(SecurityException))]
+        [TestMethod, ExpectedException(typeof(ExpressoSecurityException))]
         public void SecurityTestAllowNoneMethodsMemberInvocation()
         {
             var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.None };  
@@ -251,14 +251,14 @@ namespace Tests
             ExpressoCompiler.CompileExpression<Func<double, double>>(options, "Abs(x)", "x")(42.42);
         }
 
-        [TestMethod, ExpectedException(typeof(SecurityException))]
+        [TestMethod, ExpectedException(typeof(ExpressoSecurityException))]
         public void SecurityTestAllowMathMethodsMemberAccess()
         {
             var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMathMethods };  
             ExpressoCompiler.CompileExpression<Func<string, int>>(options, "s.Length", "s")("hello");
         }
 
-        [TestMethod, ExpectedException(typeof(SecurityException))]
+        [TestMethod, ExpectedException(typeof(ExpressoSecurityException))]
         public void SecurityTestAllowMathMethodsMemberInvocation()
         {
             var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMathMethods };  
@@ -266,7 +266,7 @@ namespace Tests
         }
 
 
-        [TestMethod, ExpectedException(typeof(SecurityException))]
+        [TestMethod, ExpectedException(typeof(ExpressoSecurityException))]
         public void SecurityTestAllowMemberAccessMathMethod()
         {
             var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMemberAccess };  
@@ -280,7 +280,7 @@ namespace Tests
             ExpressoCompiler.CompileExpression<Func<string, int>>(options, "s.Length", "s")("hello");
         }
 
-        [TestMethod, ExpectedException(typeof(SecurityException))]
+        [TestMethod, ExpectedException(typeof(ExpressoSecurityException))]
         public void SecurityTestAllowMemberAccessnMemberInvocation()
         {
             var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMemberAccess };  
@@ -288,7 +288,7 @@ namespace Tests
         }
 
 
-        [TestMethod, ExpectedException(typeof(SecurityException))]
+        [TestMethod, ExpectedException(typeof(ExpressoSecurityException))]
         public void SecurityTestAllowMemberInvokationMathMethod()
         {
             var options = new ExpressoMethodOptions() { ExpressoSecurityAccess = eExpressoSecurityAccess.AllowMemberAccess | eExpressoSecurityAccess.AllowMemberInvokation };  

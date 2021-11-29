@@ -6,9 +6,9 @@
 
 namespace ExpressoSharp
 {
-    public class CompilerException : ExpressoException
+    public class ExpressoParserException : ExpressoException
     {
-        public CompilerException(string message)
+        public ExpressoParserException(string message)
              : base(message)
         { }
     }

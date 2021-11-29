@@ -6,10 +6,8 @@
 
 namespace ExpressoSharp
 {
-    public class ParserException : ExpressoException
+    public interface IExpressoSecurityOptions
     {
-        public ParserException(string message)
-             : base(message)
-        { }
+        eExpressoSecurityAccess ExpressoSecurityAccess { get; }
     }
 }

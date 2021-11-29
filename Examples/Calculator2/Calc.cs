@@ -132,12 +132,12 @@ namespace Calculator
                     /* Compile the expression */
                     func = ExpressoCompiler.CompileExpression<Func<T>>(methodOptions, expression, _variables.ToArray());
                 }
-                catch (ParserException e)
+                catch (ExpressoParserException e)
                 {
                     Console.Error.WriteLine($"Parse error: {e.Message}");
                     continue;
                 }
-                catch (CompilerException e)
+                catch (ExpressoCompilerException e)
                 {
                     Console.Error.WriteLine($"Compile error: {e.Message}");
                     continue;
