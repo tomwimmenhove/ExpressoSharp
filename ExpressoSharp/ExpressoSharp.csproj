@@ -9,6 +9,7 @@
     <Authors>Tom Wimmenhove</Authors>
     <Company />
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Description>ExpressoSharp is a .NET library for compiling C#-syntax expressions into callable functions. This allows applications to compile mathematical expression from user-input into functions and run them at native speed. This generally requires just a single line of code. Adding global variables and using dynamic types are also supported.
     </Description>
     <Copyright>Copyright 2021</Copyright>

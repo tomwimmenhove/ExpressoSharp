@@ -6,8 +6,15 @@
 
 namespace ExpressoSharp
 {
+    /// <summary>
+    /// An ExpressoCompilerException is thrown whenever the Roslyn compiler detects errors
+    /// </summary>
     public class ExpressoCompilerException : ExpressoException
     {
+        /// <summary>
+        /// Create an instance of ExpressoCompilerException
+        /// </summary>
+        /// <param name="message">The exception message</param>
         public ExpressoCompilerException(string message)
              : base(message)
         { }

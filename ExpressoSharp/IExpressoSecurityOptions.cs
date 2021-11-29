@@ -6,8 +6,14 @@
 
 namespace ExpressoSharp
 {
+    /// <summary>
+    /// Options to alter the behavior of the compiler
+    /// </summary>
     public interface IExpressoSecurityOptions
     {
+        /// <summary>
+        /// Set what is allowed to be used inside of an expression
+        /// </summary>
         eExpressoSecurityAccess ExpressoSecurityAccess { get; }
     }
 }

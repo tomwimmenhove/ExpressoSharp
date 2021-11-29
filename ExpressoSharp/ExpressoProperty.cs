@@ -11,12 +11,35 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ExpressoSharp
 {
+    /// <summary>
+    /// The ExpressoProperty class represents a property that can be used by expressions.
+    /// The value of an ExpressoProperty will be shared between multiple compilation units. This means that, if 
+    /// multiple functions using the same ExpressoProperty are compiled by separate calls to ExpressoCompiler's
+    /// compile methods, assigning a new value in one function will reflect on the value of this property in every
+    /// function.
+    /// </summary>
+    /// <typeparam name="T">The type of the property</typeparam>
     public class ExpressoProperty<T> : IExpressoVariable
     {
+        /// <summary>
+        /// The name (as it will be used in expressions) of this property
+        /// </summary>
+        /// <value></value>
         public string Name { get; }
+
+        /// <summary>
+        /// The type of this property
+        /// </summary>
         public Type Type { get; }
+
+        /// <summary>
+        /// Options to alter the behavior of the compiler
+        /// </summary>
         public IExpressoVariableOptions Options { get; }
 
+        /// <summary>
+        /// The value of this property
+        /// </summary>
         public T Value { get; set; }
 
         IReadOnlyCollection<MemberDeclarationSyntax> IExpressoVariable.SyntaxNodes => _syntaxNodes;
@@ -25,10 +48,21 @@ namespace ExpressoSharp
         private string _setterName { get; }
         private MemberDeclarationSyntax[] _syntaxNodes;
 
+        /// <summary>
+        /// Create an ExpressoProperty instance
+        /// </summary>
+        /// <param name="name">The name (as it will be used in expressions) of this property</param>
+        /// <param name="value">An initial value to assign to this property</param>
         public ExpressoProperty(string name, T value = default)
             : this(new ExpressoPropertyOptions(), name, value)
         { }
 
+        /// <summary>
+        /// Create an ExpressoProperty instance
+        /// </summary>
+        /// <param name="options">Options to alter the behavior of the compiler</param>
+        /// <param name="name">The name (as it will be used in expressions) of this property</param>
+        /// <param name="value">An initial value to assign to this property</param>
         public ExpressoProperty(ExpressoPropertyOptions options, string name, T value = default)
         {
             var type = typeof(T);

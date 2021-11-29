@@ -6,8 +6,14 @@
 
 namespace ExpressoSharp
 {
+    /// <summary>
+    /// Options to alter the behavior of the compiler
+    /// </summary>
     public interface IExpressoVariableOptions
     {
+        /// <summary>
+        /// This varible is of the dynamic type
+        /// </summary>
         bool IsDynamic { get; }
     }
 }

@@ -15,12 +15,30 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ExpressoSharp
 {
+    /// <summary>
+    /// This static class contains all methods to compile expression or ExpressoMethod instances into delegates
+    /// </summary>
     public static class ExpressoCompiler
     {
+        /// <summary>
+        /// Compile a single expression into a delegate of type T (I.E. Func&lt;..., int&gt; or Action&lt;...&gt;)
+        /// </summary>
+        /// <param name="expression">The expression to be compiled</param>
+        /// <param name="variables">Field or property variables use in the expression</param>
+        /// <param name="parameterNames">The names of the parameters used in the expression (in order of the parameters of the delegate type T</param>
+        /// <returns>The compiled funtion as a delegate of type T</returns>
         public static T CompileExpression<T>(string expression,
             ICollection<IExpressoVariable> variables, params string[] parameterNames) where T : Delegate =>
             CompileExpression<T>(new ExpressoMethodOptions(), expression, variables, parameterNames);
 
+        /// <summary>
+        /// Compile a single expression into a delegate of type T (I.E. Func&lt;..., int&gt; or Action&lt;...&gt;)
+        /// </summary>
+        /// <param name="options">Options to alter the behavior of the compiler</param>
+        /// <param name="expression">The expression to be compiled</param>
+        /// <param name="variables">Field or property variables use in the expression</param>
+        /// <param name="parameterNames">The names of the parameters used in the expression (in order of the parameters of the delegate type T</param>
+        /// <returns>The compiled funtion as a delegate of type T</returns>
         public static T CompileExpression<T>(ExpressoMethodOptions options, string expression,
             ICollection<IExpressoVariable> variables, params string[] parameterNames) where T : Delegate
         {
@@ -33,14 +51,33 @@ namespace ExpressoSharp
             return (T) DelegateFromMethod(assemblyType, method);
         }
 
-        public static T CompileExpression<T>(ExpressoMethodOptions options, string expression,
-            params string[] parameterNames) where T : Delegate =>
-            CompileExpression<T>(options, expression, new IExpressoVariable[0], parameterNames);            
-
+        /// <summary>
+        /// Compile a single expression into a delegate of type T (I.E. Func&lt;..., int&gt; or Action&lt;...&gt;)
+        /// </summary>
+        /// <param name="expression">The expression to be compiled</param>
+        /// <param name="parameterNames">The names of the parameters used in the expression (in order of the parameters of the delegate type T</param>
+        /// <returns>The compiled funtion as a delegate of type T</returns>
         public static T CompileExpression<T>(string expression,
             params string[] parameterNames) where T : Delegate =>
             CompileExpression<T>(expression, new IExpressoVariable[0], parameterNames);            
 
+        /// <summary>
+        /// Compile a single expression into a delegate of type T (I.E. Func&lt;..., int&gt; or Action&lt;...&gt;)
+        /// </summary>
+        /// <param name="options">Options to alter the behavior of the compiler</param>
+        /// <param name="expression">The expression to be compiled</param>
+        /// <param name="parameterNames">The names of the parameters used in the expression (in order of the parameters of the delegate type T</param>
+        /// <returns>The compiled funtion as a delegate of type T</returns>
+        public static T CompileExpression<T>(ExpressoMethodOptions options, string expression,
+            params string[] parameterNames) where T : Delegate =>
+            CompileExpression<T>(options, expression, new IExpressoVariable[0], parameterNames);            
+
+        /// <summary>
+        /// Compile multiple expresions into delegates
+        /// </summary>
+        /// <param name="variables">Field or property variables use in the expressions</param>
+        /// <param name="methods">An array of methods to compile</param>
+        /// <returns>The compiled funtion as a delegate of type T</returns>
         public static Delegate[] CompileExpressions(ICollection<IExpressoVariable> variables, params IExpressoMethod[] methods)
         {
             var assembly = Compile("ExpressoSharp", "ExpressoClass", variables, methods);
@@ -51,12 +88,19 @@ namespace ExpressoSharp
             return methods.Select(x => DelegateFromMethod(assemblyType, x)).ToArray();
         }
 
+        /// <summary>
+        /// Compile multiple expresions into delegates
+        /// </summary>
+        /// <param name="methods">An array of methods to compile</param>
+        /// <returns>The compiled funtion as a delegate of type T</returns>
         public static Delegate[] CompileExpressions(params IExpressoMethod[] methods) =>
             CompileExpressions(new IExpressoVariable[0], methods);
 
-        /* Compile a dummy program to force all needed assemblies to be loaded */
-        // XXX: trade-off: slower Prime() for initializing dynamic type as well?
+        /// <summary>
+        /// Compile a dummy program to force all needed assemblies to be loaded
+        /// </summary>
         public static void Prime() => CompileExpression<Func<object>>("null");
+        //public static void Prime() => CompileExpression<Func<dynamic>>("null"); // XXX: trade-off: slower Prime() for initializing dynamic type as well?
 
         private static Delegate DelegateFromMethod(Type type, IExpressoMethod method)
         {

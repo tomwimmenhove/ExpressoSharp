@@ -13,10 +13,31 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ExpressoSharp
 {
+    /// <summary>
+    /// The ExpressoField class represents a field that can be used by expressions.
+    /// The value of an ExpressoField is limited to one single compilation unit. This means that, if multiple
+    /// functions using the same ExpressoField are compiled by separate calls to ExpressoCompiler's compile
+    /// methods, assigning a value to this field in one function will have no effect on the value of this field
+    /// in another function. However, multiple functions in the same compilation unit (I.E. compiled with
+    /// ExpressoCompiler.CompileExpressions()) will share the same field, and assignments by one function will
+    /// be 'seen' by all other functions within the same compilation unit.
+    /// </summary>
+    /// <typeparam name="T">The type of the field</typeparam>
     public class ExpressoField<T> : IExpressoVariable
     {
+        /// <summary>
+        /// The name (as it will be used in expressions) of this variable
+        /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// The type of this variable
+        /// </summary>
         public Type Type { get; }
+
+        /// <summary>
+        /// Options to alter the behavior of the compiler
+        /// </summary>
         public IExpressoVariableOptions Options { get; }
 
         IReadOnlyCollection<MemberDeclarationSyntax> IExpressoVariable.SyntaxNodes => _syntaxNodes;
@@ -25,10 +46,21 @@ namespace ExpressoSharp
         private string _setterName { get; }
         private MemberDeclarationSyntax[] _syntaxNodes;
 
+        /// <summary>
+        /// Create an ExpressoField instance
+        /// </summary>
+        /// <param name="name">The name (as it will be used in expressions) of this field</param>
+        /// <param name="initializer">A string representing the expression this field will be initialized with</param>
         public ExpressoField(string name, string initializer = null)
             : this(new ExpressoFieldOptions(), name, initializer)
         { }
 
+        /// <summary>
+        /// Create an ExpressoField instance
+        /// </summary>
+        /// <param name="options">Options to alter the behavior of the compiler</param>
+        /// <param name="name">The name (as it will be used in expressions) of this field</param>
+        /// <param name="initializer">A string representing the expression this field will be initialized with</param>
         public ExpressoField(ExpressoFieldOptions options, string name, string initializer = null)
         {
             var type = typeof(T);

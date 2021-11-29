@@ -6,8 +6,15 @@
 
 namespace ExpressoSharp
 {
+    /// <summary>
+    /// An ExpressoParserException is thrown whenever parsing of an expression fails
+    /// </summary>
     public class ExpressoParserException : ExpressoException
     {
+        /// <summary>
+        /// Create an instance of ExpressoParserException
+        /// </summary>
+        /// <param name="message">The exception message</param>
         public ExpressoParserException(string message)
              : base(message)
         { }

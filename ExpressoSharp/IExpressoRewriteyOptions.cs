@@ -6,8 +6,14 @@
 
 namespace ExpressoSharp
 {
+    /// <summary>
+    /// Options to alter the behavior of the compiler
+    /// </summary>
     public interface IExpressoRewriteyOptions
     {
+        /// <summary>
+        /// When this is set, any non-double numberic literals will automatically be replaced by doubles.
+        /// </summary>
         bool ForceNumericDouble { get; }
     }
 }
